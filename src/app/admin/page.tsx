@@ -23,6 +23,13 @@ interface IngestionLog {
   created_at: string;
 }
 
+interface PendingRequest {
+  id: string;
+  nickname: string;
+  email: string;
+  pro_request_status: string;
+}
+
 function AdminPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -31,6 +38,8 @@ function AdminPageContent() {
 
   const [authorized, setAuthorized] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
     serverStatus: 'Healthy',
@@ -137,11 +146,69 @@ function AdminPageContent() {
     }
   };
 
+  const fetchPendingRequests = async () => {
+    setLoadingRequests(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, nickname, email, pro_request_status')
+        .eq('pro_request_status', 'PENDING')
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      setPendingRequests((data as any[]) || []);
+    } catch (err) {
+      console.error('Failed to load pending PRO requests:', err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  const handleAcceptRequest = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          subscription_status: 'PRO',
+          pro_request_status: 'APPROVED'
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      fetchPendingRequests();
+      fetchAdminStats();
+    } catch (err: any) {
+      console.error('Failed to approve PRO request:', err);
+      alert('Error approving request: ' + err.message);
+    }
+  };
+
+  const handleRejectRequest = async (userId: string) => {
+    if (!confirm('Are you sure you want to decline this upgrade request?')) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          pro_request_status: 'REJECTED'
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      fetchPendingRequests();
+    } catch (err: any) {
+      console.error('Failed to reject PRO request:', err);
+      alert('Error rejecting request: ' + err.message);
+    }
+  };
+
   useEffect(() => {
     if (authorized) {
       fetchAdminStats();
       fetchRssSources();
       fetchRssLogs();
+      fetchPendingRequests();
     }
   }, [authorized]);
 
@@ -305,6 +372,75 @@ function AdminPageContent() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* PRO Plan Upgrade Requests Section */}
+        <div className="p-6 rounded-lg border border-border bg-card flex flex-col gap-4">
+          <h3 className="font-bold text-base uppercase tracking-wider border-b border-border pb-2 flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Shield className="w-4.5 h-4.5" />
+              PRO Plan Upgrade Requests
+            </span>
+            <button
+              onClick={fetchPendingRequests}
+              disabled={loadingRequests}
+              className="p-1 rounded border border-border hover:bg-card-hover text-muted hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+              title="Refresh requests"
+              aria-label="Refresh requests"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loadingRequests ? 'animate-spin' : ''}`} />
+            </button>
+          </h3>
+
+          <div className="overflow-x-auto border border-border rounded-lg bg-background">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-border bg-card">
+                  <th className="p-3 font-bold uppercase tracking-wider text-muted">User Nickname</th>
+                  <th className="p-3 font-bold uppercase tracking-wider text-muted">Email</th>
+                  <th className="p-3 font-bold uppercase tracking-wider text-muted">Status</th>
+                  <th className="p-3 font-bold uppercase tracking-wider text-muted text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border text-muted-foreground">
+                {loadingRequests ? (
+                  <tr>
+                    <td colSpan={4} className="p-4 text-center italic text-muted animate-pulse">Loading pending upgrade requests...</td>
+                  </tr>
+                ) : pendingRequests.length > 0 ? (
+                  pendingRequests.map((req) => (
+                    <tr key={req.id} className="hover:bg-card-hover transition-colors">
+                      <td className="p-3 font-bold text-foreground">{req.nickname || 'Anonymous User'}</td>
+                      <td className="p-3 font-mono">{req.email}</td>
+                      <td className="p-3">
+                        <span className="px-2.5 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-mono tracking-wider">
+                          {req.pro_request_status}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right flex justify-end gap-2">
+                        <button
+                          onClick={() => handleAcceptRequest(req.id)}
+                          className="px-3 py-1 rounded bg-foreground text-background font-bold text-[10px] uppercase hover:opacity-90 transition-opacity cursor-pointer border border-foreground"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleRejectRequest(req.id)}
+                          className="px-3 py-1 rounded bg-background text-foreground font-bold text-[10px] uppercase hover:bg-card-hover transition-colors cursor-pointer border border-border"
+                        >
+                          Decline
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="p-4 text-center italic text-muted">No pending PRO upgrade requests.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Sync Controls Card */}

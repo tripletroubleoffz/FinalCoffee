@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { useApp } from '@/context/AppContext';
 import { supabase } from '@/lib/supabaseClient';
-import { CreditCard, QrCode, CheckCircle, ShieldCheck, ArrowRight, X } from 'lucide-react';
+import { CreditCard, QrCode, CheckCircle, ShieldCheck, ArrowRight, X, Sparkles, Lock, Clock } from 'lucide-react';
 
 export default function SubscriptionPage() {
   const { profile, refreshProfile } = useApp();
@@ -23,23 +23,28 @@ export default function SubscriptionPage() {
 
   const handleUpgrade = async () => {
     if (currentPlan === 'PRO') return;
+    if (profile?.pro_request_status === 'PENDING') {
+      setPaymentSuccess(true);
+    } else {
+      setPaymentSuccess(false);
+    }
     setCheckoutOpen(true);
   };
 
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePaymentSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!profile?.id) return;
     
     setProcessing(true);
 
-    // Simulate payment network delay
+    // Simulate request processing delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     try {
-      // Update database profile subscription status to PRO
+      // Update database profile pro_request_status to PENDING
       const { error } = await supabase
         .from('profiles')
-        .update({ subscription_status: 'PRO' })
+        .update({ pro_request_status: 'PENDING' })
         .eq('id', profile.id);
 
       if (error) throw error;
@@ -175,6 +180,20 @@ export default function SubscriptionPage() {
               >
                 Current Active Plan
               </button>
+            ) : profile?.pro_request_status === 'PENDING' ? (
+              <button
+                onClick={handleUpgrade}
+                className="w-full py-2.5 rounded-md border border-amber-600/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 font-bold text-xs hover:opacity-90 transition-opacity focus:outline-none"
+              >
+                Under Review (Click to view)
+              </button>
+            ) : profile?.pro_request_status === 'REJECTED' ? (
+              <button
+                onClick={handleUpgrade}
+                className="w-full py-2.5 rounded-md border border-foreground bg-foreground text-background font-bold text-xs hover:opacity-90 transition-opacity focus:outline-none"
+              >
+                Re-apply for PRO
+              </button>
             ) : (
               <button
                 onClick={handleUpgrade}
@@ -187,7 +206,7 @@ export default function SubscriptionPage() {
 
         </div>
 
-        {/* Payment Simulator modal */}
+        {/* Redesigned Payment Coming Soon / Request Admin Activation modal */}
         {checkoutOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="fixed inset-0" onClick={closeCheckout} />
@@ -196,142 +215,68 @@ export default function SubscriptionPage() {
               
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-muted-foreground" />
-                  <span className="font-bold text-sm uppercase tracking-wider">Secure Payment Simulator</span>
+                  <Lock className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-bold text-xs uppercase tracking-wider">PRO Plan Upgrade Request</span>
                 </div>
                 <button
                   onClick={closeCheckout}
-                  className="p-1 rounded-md border border-border hover:bg-card-hover transition-colors focus:outline-none"
+                  className="p-1 rounded-md border border-border hover:bg-card-hover transition-colors focus:outline-none cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {!paymentSuccess ? (
-                <form onSubmit={handlePaymentSubmit} className="flex flex-col gap-5">
+                <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-muted-foreground">Upgrading to</span>
-                    <span className="text-lg font-extrabold">FilterCoffee PRO</span>
-                    <span className="text-sm font-semibold mt-1">₹599 / month</span>
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Upgrading to</span>
+                    <span className="text-xl font-extrabold flex items-center gap-1.5">
+                      FilterCoffee PRO <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+                    </span>
+                    <span className="text-sm font-semibold mt-0.5">₹599 / month</span>
                   </div>
 
-                  {/* Payment Method Selector */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('card')}
-                      className={`py-2 rounded-md border flex items-center justify-center gap-1.5 text-xs font-semibold transition-colors focus:outline-none ${
-                        paymentMethod === 'card'
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'border-border bg-background hover:bg-card-hover text-muted-foreground'
-                      }`}
-                    >
+                  {/* Payment Coming Soon Notice Box */}
+                  <div className="p-4 rounded-md border border-border bg-background/50 flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                       <CreditCard className="w-4 h-4" />
-                      Card Details
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('upi')}
-                      className={`py-2 rounded-md border flex items-center justify-center gap-1.5 text-xs font-semibold transition-colors focus:outline-none ${
-                        paymentMethod === 'upi'
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'border-border bg-background hover:bg-card-hover text-muted-foreground'
-                      }`}
-                    >
-                      <QrCode className="w-4 h-4" />
-                      UPI
-                    </button>
+                      <span className="text-xs font-bold uppercase tracking-wider font-mono">Payment Coming Soon</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Stripe and Razorpay gateway integrations are currently in active development. Secure native payment options will be launched in the next software release.
+                    </p>
+                    <div className="h-[1px] w-full bg-border/50" />
+                    <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
+                      To experience the PRO version today, you can submit an activation request to the administrator.
+                    </p>
                   </div>
-
-                  {/* Card Form */}
-                  {paymentMethod === 'card' ? (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Card Number</label>
-                        <input
-                          type="text"
-                          required
-                          maxLength={19}
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim())}
-                          placeholder="4111 2222 3333 4444"
-                          className="h-10 px-3 rounded-md border border-border bg-background text-sm focus:outline-none"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Expiry Date</label>
-                          <input
-                            type="text"
-                            required
-                            maxLength={5}
-                            value={cardExpiry}
-                            onChange={(e) => setCardExpiry(e.target.value)}
-                            placeholder="MM/YY"
-                            className="h-10 px-3 rounded-md border border-border bg-background text-sm focus:outline-none"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">CVC</label>
-                          <input
-                            type="password"
-                            required
-                            maxLength={3}
-                            value={cardCvc}
-                            onChange={(e) => setCardCvc(e.target.value)}
-                            placeholder="123"
-                            className="h-10 px-3 rounded-md border border-border bg-background text-sm focus:outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    /* UPI Form */
-                    <div className="flex flex-col gap-3">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">UPI ID</label>
-                        <input
-                          type="text"
-                          required
-                          value={upiId}
-                          onChange={(e) => setUpiId(e.target.value)}
-                          placeholder="e.g. name@upi"
-                          className="h-10 px-3 rounded-md border border-border bg-background text-sm focus:outline-none"
-                        />
-                      </div>
-                      <div className="p-3 border border-dashed border-border rounded bg-background flex flex-col items-center justify-center gap-1.5 select-none">
-                        <span className="text-[10px] font-bold uppercase text-muted">Or Scan QR Code</span>
-                        <div className="w-24 h-24 bg-muted border border-border rounded flex items-center justify-center relative">
-                          {/* Mock QR representation */}
-                          <QrCode className="w-16 h-16 text-muted" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   <button
-                    type="submit"
+                    onClick={() => handlePaymentSubmit()}
                     disabled={processing}
-                    className="w-full py-2.5 rounded-md border border-foreground bg-foreground text-background font-semibold text-xs hover:opacity-90 disabled:opacity-50 transition-opacity focus:outline-none flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 rounded-md border border-foreground bg-foreground text-background font-bold text-xs hover:opacity-90 disabled:opacity-50 transition-opacity focus:outline-none flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    {processing ? 'Processing Payment...' : 'Pay & Subscribe'} <ArrowRight className="w-4 h-4" />
+                    {processing ? 'Sending Request...' : 'Request Admin Activation'} <ArrowRight className="w-4 h-4" />
                   </button>
-                </form>
+                </div>
               ) : (
-                /* Payment Success screen */
+                /* Access Pending Review screen */
                 <div className="flex flex-col items-center text-center gap-4 py-4 animate-in zoom-in-95 duration-200">
-                  <div className="w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6" />
+                  <div className="w-12 h-12 rounded-full bg-background border border-border text-foreground flex items-center justify-center shadow-md animate-pulse">
+                    <Clock className="w-6 h-6 text-amber-500" />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <h3 className="font-extrabold text-base">Subscription Activated!</h3>
+                    <h3 className="font-extrabold text-base">Request Under Review</h3>
                     <p className="text-xs text-muted max-w-xs leading-relaxed">
-                      You are now a FilterCoffee PRO member. Real-time briefs and Brewing Wave audio newsletters are unlocked!
+                      Your upgrade request has been submitted to the administrator.
+                    </p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-2.5 bg-amber-500/10 p-3 rounded border border-amber-500/20">
+                      We will review your account details shortly. Standard reviews typically complete within 24 hours.
                     </p>
                   </div>
                   <button
                     onClick={closeCheckout}
-                    className="mt-4 w-full py-2 rounded-md border border-border hover:bg-card-hover font-semibold text-xs transition-colors"
+                    className="mt-4 w-full py-2.5 rounded-md border border-border hover:bg-card-hover font-semibold text-xs transition-colors cursor-pointer focus:outline-none"
                   >
                     Return to Subscriptions
                   </button>

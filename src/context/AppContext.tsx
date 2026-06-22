@@ -16,6 +16,7 @@ export interface Profile {
   avatar_url: string | null;
   subscription_status: 'FREE' | 'PRO';
   preferred_topics: string[];
+  pro_request_status?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED' | null;
 }
 
 export interface Article {
