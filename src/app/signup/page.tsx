@@ -7,9 +7,11 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Mail, Lock, User, CheckCircle, AlertCircle } from 'lucide-react';
+import { useApp } from '@/context/AppContext';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { setLegalModal } = useApp();
   
   // Fields
   const [name, setName] = useState('');
@@ -184,13 +186,21 @@ export default function SignupPage() {
                 />
                 <span className="text-xs text-muted leading-relaxed">
                   I accept the{' '}
-                  <Link href="/terms" className="font-semibold text-foreground underline focus:outline-none">
+                  <button
+                    type="button"
+                    onClick={() => setLegalModal('terms')}
+                    className="font-semibold text-foreground underline focus:outline-none cursor-pointer bg-transparent border-none p-0 inline text-xs"
+                  >
                     Terms of Service
-                  </Link>{' '}
+                  </button>{' '}
                   and{' '}
-                  <Link href="/privacy" className="font-semibold text-foreground underline focus:outline-none">
+                  <button
+                    type="button"
+                    onClick={() => setLegalModal('privacy')}
+                    className="font-semibold text-foreground underline focus:outline-none cursor-pointer bg-transparent border-none p-0 inline text-xs"
+                  >
                     Privacy Policy
-                  </Link>
+                  </button>
                 </span>
               </label>
 

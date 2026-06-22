@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
+import { LegalModal } from '@/components/ui/LegalModal';
 
 export interface Profile {
   id: string;
@@ -41,6 +42,8 @@ interface AppContextType {
   toggleSaveArticle: (articleId: string) => Promise<boolean>;
   toggleLikeArticle: (articleId: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  legalModal: 'privacy' | 'terms' | null;
+  setLegalModal: (type: 'privacy' | 'terms' | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -207,6 +210,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
+
   return (
     <AppContext.Provider
       value={{
@@ -219,9 +224,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleSaveArticle,
         toggleLikeArticle,
         logout,
+        legalModal,
+        setLegalModal,
       }}
     >
       {children}
+      {legalModal && (
+        <LegalModal
+          type={legalModal}
+          onClose={() => setLegalModal(null)}
+        />
+      )}
     </AppContext.Provider>
   );
 }

@@ -1,8 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useApp } from '@/context/AppContext';
 
 export function Footer() {
+  const { setLegalModal } = useApp();
+
   return (
     <footer className="w-full border-t border-border bg-background py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -31,12 +34,18 @@ export function Footer() {
           <div className="flex flex-col gap-3">
             <span className="font-semibold text-sm uppercase tracking-wider">Legal</span>
             <div className="flex flex-col gap-2 text-sm text-muted">
-              <Link href="/privacy" className="hover:text-foreground transition-colors">
+              <button
+                onClick={() => setLegalModal('privacy')}
+                className="hover:text-foreground transition-colors text-left focus:outline-none cursor-pointer bg-transparent border-none p-0 text-sm"
+              >
                 Privacy Policy
-              </Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors">
+              </button>
+              <button
+                onClick={() => setLegalModal('terms')}
+                className="hover:text-foreground transition-colors text-left focus:outline-none cursor-pointer bg-transparent border-none p-0 text-sm"
+              >
                 Terms of Service
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -46,7 +55,7 @@ export function Footer() {
             &copy; {new Date().getFullYear()} FilterCoffee. All rights reserved.
           </span>
           <span className="text-xs text-muted">
-            Premium Grayscale SaaS Intelligence
+            Developed by TRIPLETROUBLEOFFICIALS
           </span>
         </div>
       </div>

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { ArrowRight, Sparkles, Layers, ShieldCheck, Compass, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Layers, ShieldCheck, Compass, ArrowUpRight } from 'lucide-react';
 
 const insights = [
   {
@@ -24,12 +24,37 @@ const insights = [
   },
 ];
 
-const categories = [
-  { name: 'Freshly Brewed', desc: 'Real-time daily updates across general tech and startups.' },
-  { name: 'Model Wars', desc: 'Updates on LLMs, benchmarks, weights, and compute hardware releases.' },
-  { name: 'AI Marketplace', desc: 'Agent frameworks, SaaS launches, and deployment tooling.' },
-  { name: 'Career Radar', desc: 'Salary shifts, emerging engineering demands, and tooling benchmarks.' },
-  { name: 'Startup Funding', desc: 'Venture rounds, Seed announcements, and M&A trends.' },
+const liveUpdates = [
+  {
+    category: 'AI',
+    badgeClass: 'text-amber-600 border-amber-600/30 dark:text-amber-400 dark:border-amber-400/20',
+    headline: 'OpenAI Launches GPT-5 Preview with Native Multi-Agent Orchestration',
+    summary: 'Features native agent coordination allowing developers to define complex hierarchies directly in API calls. Impact: Shifts UI frameworks toward agentic state systems.',
+  },
+  {
+    category: 'FINANCE',
+    badgeClass: 'text-emerald-600 border-emerald-600/30 dark:text-emerald-400 dark:border-emerald-400/20',
+    headline: 'Physical Intelligence Closes $400M Seed Round for Robot Control Software',
+    summary: 'Bezos Expeditions and OpenAI back universal control models for physical movement. Valuation: $2.4B post-money.',
+  },
+  {
+    category: 'RESEARCH',
+    badgeClass: 'text-slate-600 border-slate-600/30 dark:text-slate-400 dark:border-slate-400/20',
+    headline: 'DeepMind Unveils AlphaFold 3: Modeling Protein-DNA Interactions',
+    summary: "Predicts interactions of life's molecules (DNA, RNA, chemical compounds) in silico. Research: Speeds drug validation times by 80%.",
+  },
+  {
+    category: 'MARKET',
+    badgeClass: 'text-purple-600 border-purple-600/30 dark:text-purple-400 dark:border-purple-400/20',
+    headline: 'Anthropic Launches Artifacts API for Collaborative Canvas Sharing',
+    summary: 'Allows software providers to embed shared canvas visual frames directly into enterprise messaging channels, boosting team editing productivity.',
+  },
+  {
+    category: 'CAREERS',
+    badgeClass: 'text-rose-600 border-rose-600/30 dark:text-rose-400 dark:border-rose-400/20',
+    headline: 'Rust and GPU Optimization Skills Surge in Global AI Talent Market',
+    summary: 'Data indicates a 140% year-over-year increase in job postings seeking low-level system design experts, overtaking high-level API integrations.',
+  },
 ];
 
 export default function LandingPage() {
@@ -41,10 +66,6 @@ export default function LandingPage() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 md:py-28 flex flex-col md:flex-row items-center gap-12 border-b border-border">
         {/* Left hero info */}
         <div className="flex-1 flex flex-col gap-6 items-start">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border bg-card text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Next-gen AI Processing</span>
-          </div>
 
           <div className="flex flex-col gap-2">
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-none">
@@ -404,20 +425,38 @@ export default function LandingPage() {
           <div className="h-0.5 w-12 bg-foreground" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {categories.map((cat, idx) => (
-            <div
-              key={idx}
-              className="p-5 rounded-lg border border-border bg-card hover:bg-card-hover transition-colors flex flex-col gap-3 group select-none cursor-pointer"
-            >
-              <span className="font-bold text-sm group-hover:text-muted transition-colors">
-                {cat.name}
+        <div className="p-6 md:p-8 rounded-lg border border-border bg-card shadow-lg flex flex-col gap-6 w-full max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-600 dark:bg-amber-400 animate-pulse" />
+              <span className="text-xs font-bold uppercase tracking-widest text-foreground font-mono">
+                FRESHLY BREWED TODAY (SIGNALS STREAM)
               </span>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {cat.desc}
-              </p>
             </div>
-          ))}
+            <span className="text-[10px] font-medium text-muted font-mono">
+              Interval: 1 min
+            </span>
+          </div>
+
+          {/* List items */}
+          <div className="flex flex-col gap-6">
+            {liveUpdates.map((update, idx) => (
+              <div key={idx} className="flex gap-4 items-start border-b border-border/40 pb-5 last:border-b-0 last:pb-0">
+                <div className={`px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-wider ${update.badgeClass} flex-shrink-0 min-w-[75px] text-center`}>
+                  {update.category}
+                </div>
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-sm font-bold text-foreground">
+                    {update.headline}
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {update.summary}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

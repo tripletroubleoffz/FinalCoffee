@@ -20,7 +20,8 @@ import {
   LogOut,
   ChevronDown,
   Shield,
-  Terminal
+  Terminal,
+  ArrowUp
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -35,6 +36,50 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, logout } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const mainRef = React.useRef<HTMLElement>(null);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const windowScroll = typeof window !== 'undefined' ? window.scrollY : 0;
+      const mainScroll = mainRef.current ? mainRef.current.scrollTop : 0;
+      
+      if (windowScroll > 300 || mainScroll > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    
+    // Also listen to main element scroll just in case
+    const mainEl = mainRef.current;
+    if (mainEl) {
+      mainEl.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (mainEl) {
+        mainEl.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    }
+    mainRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
 
   // Dynamic dashboard accessibility check
   const [isAdmin, setIsAdmin] = React.useState(false);
@@ -328,10 +373,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main Application Stage View */}
-        <main className="flex-1 min-w-0 p-4 md:p-8 overflow-y-auto">
+        <main ref={mainRef} className="flex-1 min-w-0 p-4 md:p-8 overflow-y-auto relative">
           <div className="max-w-5xl mx-auto w-full">
             {children}
           </div>
+          
+          {/* Scroll To Top Button */}
+          {showScrollTop && (
+            <button
+              onClick={scrollToTop}
+              className="fixed bottom-6 right-6 p-2.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-background/80 hover:bg-background text-foreground shadow-md hover:shadow-lg transition-all duration-300 z-50 flex items-center justify-center cursor-pointer"
+              title="Scroll to top"
+              aria-label="Scroll to top"
+            >
+              <ArrowUp className="w-5 h-5" />
+            </button>
+          )}
         </main>
       </div>
     </div>
