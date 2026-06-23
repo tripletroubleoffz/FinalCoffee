@@ -196,7 +196,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
 
           {/* Logo Branding */}
-          <Link href="/home" className="flex items-center focus:outline-none">
+          <Link href="/" className="flex items-center focus:outline-none">
             <div className="relative w-36 h-10">
               <Image
                 src="/logo.png"
@@ -318,7 +318,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <aside className="fixed inset-y-0 left-0 w-64 border-r border-border bg-card p-4 flex flex-col gap-4 z-50 animate-in slide-in-from-left duration-200 md:hidden">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <Link
-                  href="/home"
+                  href="/"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center focus:outline-none"
                 >

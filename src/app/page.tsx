@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ArrowRight, Layers, ShieldCheck, Compass, ArrowUpRight } from 'lucide-react';
+import { useApp } from '@/context/AppContext';
+import { useRouter } from 'next/navigation';
 
 const insights = [
   {
@@ -59,7 +61,18 @@ const liveUpdates = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { user } = useApp();
   const [updates, setUpdates] = useState(liveUpdates);
+
+  const handleEnterClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (user) {
+      router.push('/home');
+    } else {
+      router.push('/login');
+    }
+  };
 
   useEffect(() => {
     const loadLiveUpdates = async () => {
@@ -158,12 +171,12 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-wrap gap-4 mt-2 w-full sm:w-auto">
-            <Link
-              href="/login"
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 text-base font-bold border border-foreground bg-foreground text-background px-6 py-3 rounded-md hover:opacity-90 transition-opacity focus:outline-none"
+            <button
+              onClick={handleEnterClick}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 text-base font-bold border border-foreground bg-foreground text-background px-6 py-3 rounded-md hover:opacity-90 transition-opacity focus:outline-none cursor-pointer animate-pulse-subtle"
             >
               ENTER <ArrowRight className="w-4 h-4" />
-            </Link>
+            </button>
             <Link
               href="#features"
               className="flex-1 sm:flex-initial flex items-center justify-center text-base font-semibold border border-border bg-background hover:bg-card-hover px-6 py-3 rounded-md transition-colors"
