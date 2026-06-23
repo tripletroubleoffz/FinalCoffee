@@ -94,7 +94,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [profile]);
 
-  // Silent self-healing background RSS sync (every 15 minutes)
+  // Silent self-healing background RSS sync (every 15 minutes for all logged-in users)
+  // Admin can also trigger manually via the Admin Dashboard.
   React.useEffect(() => {
     const triggerBackgroundIngestion = async () => {
       try {
@@ -115,6 +116,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       triggerBackgroundIngestion();
     }
   }, [user]);
+
 
   // Compute dynamic navigation items
   const sidebarItems: SidebarItem[] = [

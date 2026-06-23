@@ -8,26 +8,15 @@ import { supabase } from '@/lib/supabaseClient';
 const isPlaceholderImage = (url: string | null | undefined): boolean => {
   if (!url) return true;
   const lower = url.toLowerCase();
+  // Only block URLs that are purely generic/blank placeholder images
   return (
-    lower.includes('placeholder') ||
-    lower.includes('default') ||
-    lower.includes('logo') ||
-    lower.includes('avatar') ||
-    lower.includes('gradient') ||
-    // Check for OpenAI / ctfassets abstract template image patterns
-    (lower.includes('ctfassets.net') && (
-      lower.includes('frame') ||
-      lower.includes('seo') ||
-      lower.includes('cover') ||
-      lower.includes('16x9') ||
-      lower.includes('16-9') ||
-      lower.includes('blog-16-9') ||
-      lower.includes('artwork') ||
-      lower.includes('blog_16.9') ||
-      lower.includes('blog-16.9') ||
-      lower.includes('stories_16.9') ||
-      lower.includes('stories_16-9')
-    ))
+    lower.includes('/placeholder') ||
+    lower.includes('placeholder.com') ||
+    lower.includes('via.placeholder') ||
+    lower.includes('dummyimage.com') ||
+    lower === '' ||
+    // Reject data URIs (inline SVG/base64 that are usually blank)
+    lower.startsWith('data:image/svg')
   );
 };
 
@@ -185,18 +174,20 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
               </span>
             </div>
 
-            <div className="h-px bg-border w-full" />
-
+            {/* Hero Image — shown right below headline */}
             {article.image_url && !modalImageError && !isPlaceholderImage(article.image_url) && (
-              <div className="relative w-full h-64 rounded-lg overflow-hidden border border-border bg-muted">
+              <div className="relative w-full h-72 rounded-lg overflow-hidden border border-border bg-muted -mx-0">
                 <img
                   src={article.image_url}
                   alt={article.headline}
                   className="object-cover w-full h-full"
                   onError={() => setModalImageError(true)}
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
               </div>
             )}
+
+            <div className="h-px bg-border w-full" />
 
             {/* Body Content */}
             <div className="flex flex-col gap-4 text-base leading-relaxed text-muted-foreground">

@@ -664,9 +664,15 @@ function AdminPageContent() {
           </h3>
 
           {syncResult && (
-            <div className={`p-4 rounded-md border text-xs flex flex-col gap-2 ${syncResult.status === 'SUCCESS' ? 'border-green-500/20 bg-green-500/5 text-green-500' : 'border-red-500/20 bg-red-500/5 text-red-500'}`}>
+            <div className={`p-4 rounded-md border text-xs flex flex-col gap-2 ${
+              syncResult.status === 'SUCCESS'
+                ? 'border-green-500/20 bg-green-500/5 text-green-500'
+                : syncResult.status === 'PARTIAL'
+                ? 'border-amber-500/20 bg-amber-500/5 text-amber-500'
+                : 'border-red-500/20 bg-red-500/5 text-red-500'
+            }`}>
               <div className="flex items-center gap-2 font-bold">
-                {syncResult.status === 'SUCCESS' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                {syncResult.status === 'SUCCESS' ? <CheckCircle className="w-4 h-4" /> : syncResult.status === 'PARTIAL' ? <AlertCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                 <span>Sync Complete: {syncResult.status}</span>
               </div>
               <p>Successfully imported {syncResult.imported} new articles from configured RSS sources.</p>

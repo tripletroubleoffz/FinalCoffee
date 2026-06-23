@@ -225,11 +225,10 @@ export async function POST() {
             if (!item) continue;
             try {
               const queryText = `
-                INSERT INTO public.articles (category, headline, summary, content, image_url, link, created_at, likes_count)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, 0)
-                ON CONFLICT (link) DO UPDATE SET
+                INSERT INTO public.articles (category, headline, summary, content, image_url, created_at, likes_count)
+                VALUES ($1, $2, $3, $4, $5, $6, 0)
+                ON CONFLICT (headline) DO UPDATE SET
                   category = EXCLUDED.category,
-                  headline = EXCLUDED.headline,
                   summary = EXCLUDED.summary,
                   content = EXCLUDED.content,
                   image_url = COALESCE(EXCLUDED.image_url, public.articles.image_url)
@@ -242,7 +241,6 @@ export async function POST() {
                 item.summary.substring(0, 1000), // Protect database constraint sizing
                 item.content,
                 item.image_url,
-                item.link,
                 item.created_at
               ]);
 
@@ -262,7 +260,15 @@ export async function POST() {
     }
 
     // 3. Log ingestion attempt
-    const status = hasErrors && totalImported === 0 ? 'FAILURE' : 'SUCCESS';
+    let status: 'SUCCESS' | 'PARTIAL' | 'FAILURE';
+    if (!hasErrors) {
+      status = 'SUCCESS';
+    } else if (totalImported > 0) {
+      status = 'PARTIAL';
+    } else {
+      status = 'FAILURE';
+    }
+
     await pgClient.query(
       'INSERT INTO public.rss_ingestion_logs (status, items_imported, error_message) VALUES ($1, $2, $3)',
       [status, totalImported, hasErrors ? errorMessage : null]

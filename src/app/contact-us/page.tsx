@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { FAQAccordion } from '@/components/ui/FAQAccordion';
+import { useApp } from '@/context/AppContext';
 import { supabase } from '@/lib/supabaseClient';
 import { Mail, MessageSquare, Send, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -13,11 +14,21 @@ interface FAQ {
 }
 
 export default function ContactUsPage() {
+  const { profile } = useApp();
+
   // Form fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+
+  // Auto-fill name and email from user profile
+  useEffect(() => {
+    if (profile) {
+      if (profile.nickname) setName(profile.nickname);
+      if (profile.email) setEmail(profile.email);
+    }
+  }, [profile]);
 
   // States
   const [faqs, setFaqs] = useState<FAQ[]>([]);
@@ -137,6 +148,9 @@ export default function ContactUsPage() {
                   placeholder="name@example.com"
                   className="h-10 px-3 rounded-md border border-border bg-background text-sm focus:outline-none"
                 />
+                {profile?.email && (
+                  <span className="text-[10px] text-muted">Auto-filled from your account · You can edit this</span>
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">
