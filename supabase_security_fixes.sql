@@ -96,18 +96,22 @@ CREATE POLICY "Allow anonymous insert of contact submissions" ON public.contact_
 
 -- rss_sources: Restrict ALL access controls to admin role
 DROP POLICY IF EXISTS "Allow all updates of rss_sources" ON public.rss_sources;
+DROP POLICY IF EXISTS "Allow admin all updates of rss_sources" ON public.rss_sources;
 CREATE POLICY "Allow admin all updates of rss_sources" ON public.rss_sources
   FOR ALL USING (
-    (auth.jwt() ->> 'email') = 'tripletrouble.offz@gmail.com'
-  ) WITH CHECK (
-    (auth.jwt() ->> 'email') = 'tripletrouble.offz@gmail.com'
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid() AND profiles.is_admin = true
+    )
   );
 
 -- rss_ingestion_logs: Restrict ALL access controls to admin role
 DROP POLICY IF EXISTS "Allow all updates of rss_ingestion_logs" ON public.rss_ingestion_logs;
+DROP POLICY IF EXISTS "Allow admin all updates of rss_ingestion_logs" ON public.rss_ingestion_logs;
 CREATE POLICY "Allow admin all updates of rss_ingestion_logs" ON public.rss_ingestion_logs
   FOR ALL USING (
-    (auth.jwt() ->> 'email') = 'tripletrouble.offz@gmail.com'
-  ) WITH CHECK (
-    (auth.jwt() ->> 'email') = 'tripletrouble.offz@gmail.com'
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid() AND profiles.is_admin = true
+    )
   );

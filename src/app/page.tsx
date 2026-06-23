@@ -82,12 +82,14 @@ export default function LandingPage() {
 
       const getTrending = async (dbCategories: string[]) => {
         try {
-          // 1. Try to get most liked / newest article from last 7 days
+          const startLimit = new Date(Math.max(oneWeekAgo.getTime(), new Date('2026-06-01T00:00:00Z').getTime()));
+
+          // 1. Try to get most liked / newest article from last 7 days (post June 1, 2026)
           let { data, error } = await supabase
             .from('articles')
             .select('category, headline, summary')
             .in('category', dbCategories)
-            .gte('created_at', oneWeekAgoStr)
+            .gte('created_at', startLimit.toISOString())
             .order('likes_count', { ascending: false })
             .order('created_at', { ascending: false })
             .limit(1);
@@ -98,11 +100,12 @@ export default function LandingPage() {
             return data[0];
           }
 
-          // 2. Fallback to latest overall if none in the last 7 days
+          // 2. Fallback to latest overall since June 1, 2026
           const { data: fallback, error: fallbackError } = await supabase
             .from('articles')
             .select('category, headline, summary')
             .in('category', dbCategories)
+            .gte('created_at', '2026-06-01T00:00:00Z')
             .order('likes_count', { ascending: false })
             .order('created_at', { ascending: false })
             .limit(1);
@@ -188,7 +191,7 @@ export default function LandingPage() {
 
         {/* Right hero cup graphic */}
         <div className="flex-1 flex items-center justify-center w-full">
-          <div className="relative w-72 h-72 md:w-96 md:h-96 bg-background flex items-center justify-center overflow-hidden">
+          <div className="relative w-72 h-72 md:w-96 md:h-96 bg-background flex items-center justify-center">
             {/* Custom Smoky & Volumetric styles */}
             <style>{`
               @keyframes riseAndFade {
@@ -209,15 +212,15 @@ export default function LandingPage() {
                 0% {
                   transform: translateY(0) scaleX(0.6) translateX(0);
                   opacity: 0;
-                  filter: blur(6px);
+                  filter: blur(3px);
                 }
                 18% {
                   opacity: 0.70;
                 }
                 100% {
-                  transform: translateY(-200px) scaleX(2.4) translateX(var(--drift));
+                  transform: translateY(-200px) scaleX(1.8) translateX(var(--drift));
                   opacity: 0;
-                  filter: blur(20px);
+                  filter: blur(10px);
                 }
               }
 
@@ -225,15 +228,15 @@ export default function LandingPage() {
                 0% {
                   transform: translateY(0) scale(0.5) translateX(0);
                   opacity: 0;
-                  filter: blur(8px);
+                  filter: blur(5px);
                 }
                 20% {
                   opacity: 0.55;
                 }
                 100% {
-                  transform: translateY(-220px) scale(3.5) translateX(var(--drift));
+                  transform: translateY(-220px) scale(2.8) translateX(var(--drift));
                   opacity: 0;
-                  filter: blur(28px);
+                  filter: blur(14px);
                 }
               }
 
@@ -248,6 +251,7 @@ export default function LandingPage() {
                 font-weight: 600;
                 pointer-events: none;
                 text-shadow: 0 0 6px rgba(214, 166, 116, 0.45);
+                will-change: transform, opacity;
               }
 
               :is(.dark) .steam-particle {
@@ -263,7 +267,8 @@ export default function LandingPage() {
                 animation: smokeFlow var(--duration) infinite ease-out;
                 animation-delay: var(--delay);
                 pointer-events: none;
-                filter: blur(3px);
+                filter: blur(2px);
+                will-change: transform, opacity;
               }
 
               :is(.dark) .steam-cloud {
@@ -278,7 +283,8 @@ export default function LandingPage() {
                 animation: smokePuff var(--duration) infinite ease-out;
                 animation-delay: var(--delay);
                 pointer-events: none;
-                filter: blur(10px);
+                filter: blur(5px);
+                will-change: transform, opacity;
               }
 
               :is(.dark) .smoke-puff {
@@ -292,12 +298,6 @@ export default function LandingPage() {
               { delay: '1.5s', duration: '7s',   drift: '22px',  width: '44px', height: '44px', left: '48%' },
               { delay: '3.2s', duration: '6.5s', drift: '-8px',  width: '40px', height: '40px', left: '41%' },
               { delay: '0.8s', duration: '8s',   drift: '12px',  width: '52px', height: '52px', left: '46%' },
-              { delay: '2.4s', duration: '7.5s', drift: '-25px', width: '48px', height: '48px', left: '39%' },
-              { delay: '4s',   duration: '6.8s', drift: '30px',  width: '42px', height: '42px', left: '54%' },
-              { delay: '1.2s', duration: '8.5s', drift: '-10px', width: '56px', height: '56px', left: '43%' },
-              { delay: '3s',   duration: '7.8s', drift: '18px',  width: '50px', height: '50px', left: '50%' },
-              { delay: '4.8s', duration: '7.2s', drift: '-15px', width: '38px', height: '38px', left: '45%' },
-              { delay: '2s',   duration: '8.2s', drift: '25px',  width: '46px', height: '46px', left: '52%' },
             ].map((cloud, idx) => (
               <div
                 key={idx}
@@ -317,10 +317,6 @@ export default function LandingPage() {
             {[
               { delay: '0s',   duration: '9s',  drift: '-22px', width: '65px', height: '65px', left: '42%' },
               { delay: '2s',   duration: '11s', drift: '28px',  width: '75px', height: '75px', left: '47%' },
-              { delay: '4.5s', duration: '10s', drift: '-15px', width: '60px', height: '60px', left: '38%' },
-              { delay: '3.2s', duration: '12s', drift: '20px',  width: '70px', height: '70px', left: '52%' },
-              { delay: '1.5s', duration: '10.5s', drift: '-10px', width: '62px', height: '62px', left: '44%' },
-              { delay: '5.5s', duration: '11.5s', drift: '25px',  width: '68px', height: '68px', left: '49%' },
             ].map((puff, idx) => (
               <div
                 key={idx}
@@ -339,17 +335,10 @@ export default function LandingPage() {
             {/* Volumetric Text Particles */}
             {[
               { text: 'AI', delay: '0s', duration: '6s', size: '11px', drift: '-20px', left: '42%' },
-              { text: 'signal', delay: '1s', duration: '5.5s', size: '12px', drift: '25px', left: '55%' },
-              { text: 'data', delay: '2s', duration: '6.5s', size: '10px', drift: '5px', left: '48%' },
-              { text: 'INR', delay: '0.5s', duration: '5s', size: '11px', drift: '15px', left: '52%' },
-              { text: 'USD', delay: '1.5s', duration: '7s', size: '10px', drift: '-15px', left: '40%' },
-              { text: 'feed', delay: '3s', duration: '6s', size: '12px', drift: '30px', left: '58%' },
-              { text: 'AI', delay: '2.5s', duration: '5.8s', size: '9px', drift: '-10px', left: '45%' },
-              { text: 'INR', delay: '3.5s', duration: '6.2s', size: '10px', drift: '10px', left: '50%' },
-              { text: 'signal', delay: '4s', duration: '6.8s', size: '13px', drift: '20px', left: '53%' },
-              { text: 'data', delay: '4.5s', duration: '5.4s', size: '10px', drift: '-25px', left: '38%' },
-              { text: 'O', delay: '0.8s', duration: '4.8s', size: '9px', drift: '-5px', left: '46%' },
-              { text: '()', delay: '2.2s', duration: '6.1s', size: '8px', drift: '18px', left: '49%' },
+              { text: 'signal', delay: '1.5s', duration: '7s', size: '12px', drift: '25px', left: '55%' },
+              { text: 'data', delay: '3s', duration: '6.5s', size: '10px', drift: '5px', left: '48%' },
+              { text: 'INR', delay: '4.5s', duration: '6s', size: '11px', drift: '15px', left: '52%' },
+              { text: 'USD', delay: '2.2s', duration: '6.8s', size: '10px', drift: '-15px', left: '40%' },
             ].map((part, idx) => (
               <span
                 key={idx}
@@ -379,7 +368,7 @@ export default function LandingPage() {
                 <defs>
                   {/* Cup Body Clip Path */}
                   <clipPath id="cup-body-clip">
-                    <path d="M 70,45 L 210,45 C 208,95 196,145 180,145 L 100,145 C 84,145 72,95 70,45 Z" />
+                    <path d="M 70,45 L 210,45 C 208,95 196,147 180,147 L 100,147 C 84,147 72,95 70,45 Z" />
                   </clipPath>
                   
                   {/* Handle Clip Path */}
@@ -412,29 +401,7 @@ export default function LandingPage() {
                   className="fill-[#6B4B3D] dark:fill-[#E6E6E6] transition-colors duration-300"
                 />
 
-                {/* Cup Body (With Clipping for Shading) */}
-                <g clipPath="url(#cup-body-clip)">
-                  {/* Cup Base Color */}
-                  <rect
-                    x="50"
-                    y="30"
-                    width="180"
-                    height="130"
-                    className="fill-[#5C4033] dark:fill-white transition-colors duration-300"
-                  />
-                  {/* Diagonal Shadow */}
-                  <polygon
-                    points="130,30 230,30 230,160 155,160"
-                    className="fill-[#4A3227] dark:fill-[#E6E6E6] transition-colors duration-300"
-                  />
-                  {/* Left Side Highlight */}
-                  <path
-                    d="M 70,45 C 72,95 84,145 100,145 C 90,135 80,95 78,45 Z"
-                    className="fill-[#7A5545] dark:fill-[#F2F2F2] opacity-80 dark:opacity-100 transition-colors duration-300"
-                  />
-                </g>
-
-                {/* Handle (With Clipping for Shading) */}
+                {/* Handle (Drawn behind the cup body to naturally mask borders) */}
                 <g clipPath="url(#handle-clip)">
                   {/* Handle Base Color */}
                   <rect
@@ -453,6 +420,28 @@ export default function LandingPage() {
                   <path
                     d="M 204,56 C 225,50 255,52 262,76 C 246,80 240,65 205,68 Z"
                     className="fill-[#7A5545] dark:fill-[#F2F2F2] transition-colors duration-300"
+                  />
+                </g>
+
+                {/* Cup Body (Drawn on top of Handle to hide joints cleanly) */}
+                <g clipPath="url(#cup-body-clip)">
+                  {/* Cup Base Color */}
+                  <rect
+                    x="50"
+                    y="30"
+                    width="180"
+                    height="130"
+                    className="fill-[#5C4033] dark:fill-white transition-colors duration-300"
+                  />
+                  {/* Diagonal Shadow */}
+                  <polygon
+                    points="130,30 230,30 230,160 155,160"
+                    className="fill-[#4A3227] dark:fill-[#E6E6E6] transition-colors duration-300"
+                  />
+                  {/* Left Side Highlight */}
+                  <path
+                    d="M 70,45 C 72,95 84,147 100,147 C 90,135 80,95 78,45 Z"
+                    className="fill-[#7A5545] dark:fill-[#F2F2F2] opacity-80 dark:opacity-100 transition-colors duration-300"
                   />
                 </g>
               </svg>

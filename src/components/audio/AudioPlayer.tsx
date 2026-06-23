@@ -15,7 +15,7 @@ export function AudioPlayer({ article }: AudioPlayerProps) {
   
   // Construct text to read
   const textToSpeak = article 
-    ? `${article.headline}. Category: ${article.category}. Summary: ${article.summary}. Full content: ${article.content}`
+    ? `${article.headline}. Category: ${article.category}. Summary: ${article.summary}.`
     : '';
   
   const duration = textToSpeak.length;

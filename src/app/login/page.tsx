@@ -28,8 +28,13 @@ export default function LoginPage() {
 
       if (loginError) {
         // Check if this is a requested test account, if so, auto-signup
-        const isTestAdmin = email === 'tripletrouble.offz@gmail.com' && password === 'TripleTrouble@123';
-        const isTestDev = email === 'mukilan258@gmail.com' && password === 'Qwerty@123';
+        const testAdminEmail = process.env.NEXT_PUBLIC_TEST_ADMIN_EMAIL;
+        const testAdminPassword = process.env.NEXT_PUBLIC_TEST_ADMIN_PASSWORD;
+        const testDevEmail = process.env.NEXT_PUBLIC_TEST_DEV_EMAIL;
+        const testDevPassword = process.env.NEXT_PUBLIC_TEST_DEV_PASSWORD;
+
+        const isTestAdmin = !!(testAdminEmail && email === testAdminEmail && password === testAdminPassword);
+        const isTestDev = !!(testDevEmail && email === testDevEmail && password === testDevPassword);
 
         if (isTestAdmin || isTestDev) {
           const nickname = isTestAdmin ? 'Admin Team' : 'Mukilan Dev';
@@ -62,10 +67,21 @@ export default function LoginPage() {
         }
       }
 
-      // Check role redirection
-      if (email === 'tripletrouble.offz@gmail.com') {
+      // Check role redirection dynamically from user profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Could not retrieve user session after login.');
+      }
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_admin, is_developer')
+        .eq('id', user.id)
+        .single();
+
+      if (profileData?.is_admin) {
         router.push('/home?role=admin');
-      } else if (email === 'mukilan258@gmail.com') {
+      } else if (profileData?.is_developer) {
         router.push('/home?role=developer');
       } else {
         router.push('/home');
@@ -100,7 +116,7 @@ export default function LoginPage() {
           {/* Brand header */}
           <div className="flex flex-col items-center gap-2 text-center">
             <Link href="/" className="relative w-12 h-12 mb-2 focus:outline-none">
-              <Image src="/logo.png" alt="Logo" fill sizes="48px" className="object-contain dark:invert" />
+              <Image src="/logo.png" alt="Logo" fill sizes="48px" className="object-contain dark:invert" priority />
             </Link>
             <h1 className="text-xl font-bold tracking-tight">Welcome Back</h1>
             <p className="text-xs text-muted leading-relaxed max-w-xs">

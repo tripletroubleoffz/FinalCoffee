@@ -23,14 +23,42 @@ export default function BrewingWavePage() {
     try {
       const { data, error } = await supabase
         .from('articles')
-        .select('*')
+        .select('id, category, headline, duration, audio_url, transcript, created_at, likes_count')
+        .gte('created_at', '2026-06-01T00:00:00Z')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      const tracks = data as Article[] || [];
-      setAudioArticles(tracks);
-      if (tracks.length > 0) {
-        setSelectedTrack(tracks[0]);
+      const allArticles = (data as Article[] || []);
+
+      // Filter to match the homepage's trending sections
+      // 1. Hot news: top 15 latest overall
+      const hotNews = allArticles.slice(0, 15);
+
+      // 2. Trending this month
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const startOfMonthStr = startOfMonth.toISOString();
+      const thisMonthArticles = allArticles.filter(art => art.created_at >= startOfMonthStr);
+      const trendingThisMonth = [...thisMonthArticles]
+        .sort((a, b) => b.likes_count - a.likes_count)
+        .slice(0, 15);
+
+      // 3. Most liked of all time
+      const mostLikedAllTime = [...allArticles]
+        .sort((a, b) => b.likes_count - a.likes_count)
+        .slice(0, 15);
+
+      // Merge and remove duplicates
+      const mergedMap = new Map<string, Article>();
+      hotNews.forEach(a => mergedMap.set(a.id, a));
+      trendingThisMonth.forEach(a => mergedMap.set(a.id, a));
+      mostLikedAllTime.forEach(a => mergedMap.set(a.id, a));
+
+      const trendingArticles = Array.from(mergedMap.values());
+      trendingArticles.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setAudioArticles(trendingArticles);
+      if (trendingArticles.length > 0) {
+        setSelectedTrack(trendingArticles[0]);
       }
     } catch (err) {
       console.error('Failed to fetch audio feeds:', err);
@@ -166,8 +194,13 @@ export default function BrewingWavePage() {
             {/* Stage Split Layout */}
             <div className="flex flex-col lg:flex-row gap-6 items-start">
               
-              {/* Left Column: Playlist selector */}
-              <div className="w-full lg:w-72 border border-border rounded-lg bg-card overflow-hidden">
+              {/* Left Column: Audio details and panels */}
+              <div className="flex-1 w-full order-1 lg:order-none">
+                <AudioPlayer article={selectedTrack} />
+              </div>
+
+              {/* Right Column: Playlist selector */}
+              <div className="w-full lg:w-72 border border-border rounded-lg bg-card overflow-hidden order-2 lg:order-none">
                 <div className="p-3 border-b border-border bg-background flex items-center gap-2">
                   <Music className="w-4 h-4 text-muted" />
                   <span className="text-xs font-bold uppercase tracking-wider">Audio Playlists</span>
@@ -209,11 +242,6 @@ export default function BrewingWavePage() {
                     No voice feeds match criteria.
                   </div>
                 )}
-              </div>
-
-              {/* Right Column: Audio details and panels */}
-              <div className="flex-1 w-full">
-                <AudioPlayer article={selectedTrack} />
               </div>
 
             </div>

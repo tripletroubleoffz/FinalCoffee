@@ -25,11 +25,17 @@ export default function BrewingRoomPage() {
     try {
       const { data, error } = await supabase
         .from('articles')
-        .select('*')
+        .select('id, category, headline, summary, content, image_url, likes_count, created_at')
+        .gte('created_at', '2026-06-01T00:00:00Z')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setArticles(data as Article[] || []);
+      
+      // Enforce the 500 character content requirement
+      const validArticles = (data as Article[] || []).filter(
+        (a) => a.content && a.content.trim().length >= 500
+      );
+      setArticles(validArticles);
     } catch (err) {
       console.error('Failed to load articles in discovery:', err);
     } finally {

@@ -16,13 +16,45 @@ export default function HomePage() {
   const fetchArticles = async () => {
     setLoadingArticles(true);
     try {
+      // Fetch articles created since the company startup date of June 1, 2026
       const { data, error } = await supabase
         .from('articles')
-        .select('*')
+        .select('id, category, headline, summary, image_url, likes_count, created_at')
+        .gte('created_at', '2026-06-01T00:00:00Z')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setArticles(data as Article[] || []);
+      const allArticles = (data as Article[] || []);
+
+      // 1. Hot news: top 15 latest overall (since June 1, 2026)
+      const hotNews = allArticles.slice(0, 15);
+
+      // 2. Trending this month (June 2026)
+      // Filters for articles created in the current month, sorted by likes descending
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const startOfMonthStr = startOfMonth.toISOString();
+      const thisMonthArticles = allArticles.filter(art => art.created_at >= startOfMonthStr);
+      const trendingThisMonth = [...thisMonthArticles]
+        .sort((a, b) => b.likes_count - a.likes_count)
+        .slice(0, 15);
+
+      // 3. Most liked of all time (since June 1, 2026)
+      const mostLikedAllTime = [...allArticles]
+        .sort((a, b) => b.likes_count - a.likes_count)
+        .slice(0, 15);
+
+      // Merge sections and remove duplicates
+      const mergedMap = new Map<string, Article>();
+      hotNews.forEach(a => mergedMap.set(a.id, a));
+      trendingThisMonth.forEach(a => mergedMap.set(a.id, a));
+      mostLikedAllTime.forEach(a => mergedMap.set(a.id, a));
+
+      const mergedArticles = Array.from(mergedMap.values());
+      
+      // Sort final list by created_at descending
+      mergedArticles.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setArticles(mergedArticles);
     } catch (err) {
       console.error('Failed to fetch articles:', err);
     } finally {

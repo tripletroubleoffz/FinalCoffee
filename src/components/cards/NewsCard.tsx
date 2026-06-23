@@ -1,8 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Article } from '@/context/AppContext';
 import { Heart, Bookmark, Eye, X } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+
+const isPlaceholderImage = (url: string | null | undefined): boolean => {
+  if (!url) return true;
+  const lower = url.toLowerCase();
+  return (
+    lower.includes('placeholder') ||
+    lower.includes('default') ||
+    lower.includes('logo') ||
+    lower.includes('avatar') ||
+    lower.includes('gradient') ||
+    // Check for OpenAI / ctfassets abstract template image patterns
+    (lower.includes('ctfassets.net') && (
+      lower.includes('frame') ||
+      lower.includes('seo') ||
+      lower.includes('cover') ||
+      lower.includes('16x9') ||
+      lower.includes('16-9') ||
+      lower.includes('blog-16-9') ||
+      lower.includes('artwork') ||
+      lower.includes('blog_16.9') ||
+      lower.includes('blog-16.9') ||
+      lower.includes('stories_16.9') ||
+      lower.includes('stories_16-9')
+    ))
+  );
+};
 
 interface NewsCardProps {
   article: Article;
@@ -14,6 +41,31 @@ interface NewsCardProps {
 
 export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCardProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [modalImageError, setModalImageError] = useState(false);
+
+  const [content, setContent] = useState<string | null>(article.content || null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  useEffect(() => {
+    if (detailsOpen && !content) {
+      setLoadingDetails(true);
+      supabase
+        .from('articles')
+        .select('content')
+        .eq('id', article.id)
+        .single()
+        .then(({ data, error }) => {
+          if (data) {
+            setContent(data.content);
+          } else if (error) {
+            console.error('Failed to fetch details:', error);
+          }
+          setLoadingDetails(false);
+        });
+    }
+  }, [detailsOpen, article.id, content]);
+
 
   return (
     <>
@@ -40,6 +92,16 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
             <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
               {article.summary}
             </p>
+            {article.image_url && !imageError && !isPlaceholderImage(article.image_url) && (
+              <div className="relative w-full h-40 rounded-md overflow-hidden mt-2 border border-border bg-muted">
+                <img
+                  src={article.image_url}
+                  alt={article.headline}
+                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                  onError={() => setImageError(true)}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -56,7 +118,7 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
               }`}
               aria-label={isLiked ? 'Unlike article' : 'Like article'}
             >
-              <Heart className={`w-4.5 h-4.5 ${isLiked ? 'fill-foreground stroke-foreground' : ''}`} />
+              <Heart className={`w-4.5 h-4.5 transition-colors ${isLiked ? 'fill-red-500 stroke-red-500 text-red-500' : ''}`} />
               <span>{article.likes_count}</span>
             </button>
 
@@ -125,14 +187,44 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
 
             <div className="h-px bg-border w-full" />
 
+            {article.image_url && !modalImageError && !isPlaceholderImage(article.image_url) && (
+              <div className="relative w-full h-64 rounded-lg overflow-hidden border border-border bg-muted">
+                <img
+                  src={article.image_url}
+                  alt={article.headline}
+                  className="object-cover w-full h-full"
+                  onError={() => setModalImageError(true)}
+                />
+              </div>
+            )}
+
             {/* Body Content */}
             <div className="flex flex-col gap-4 text-base leading-relaxed text-muted-foreground">
-              <p className="font-medium text-foreground">
-                {article.summary}
-              </p>
-              <p className="whitespace-pre-line">
-                {article.content}
-              </p>
+              {loadingDetails ? (
+                <div className="flex flex-col gap-3 animate-pulse">
+                  <div className="h-4 w-full bg-border rounded" />
+                  <div className="h-4 w-5/6 bg-border rounded" />
+                  <div className="h-4 w-4/5 bg-border rounded" />
+                  <div className="h-4 w-full bg-border rounded" />
+                </div>
+              ) : content ? (
+                content.split('\n\n').map((para, index) => {
+                  const trimmed = para.trim();
+                  if (!trimmed) return null;
+                  return (
+                    <p 
+                      key={index} 
+                      className={index === 0 ? "font-medium text-foreground" : "whitespace-pre-line"}
+                    >
+                      {trimmed}
+                    </p>
+                  );
+                })
+              ) : (
+                <p className="font-medium text-foreground">
+                  {article.summary}
+                </p>
+              )}
             </div>
 
             <div className="h-px bg-border w-full mt-2" />
@@ -142,10 +234,10 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
               <button
                 onClick={onLike}
                 className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-md border border-border hover:bg-card-hover transition-colors ${
-                  isLiked ? 'text-foreground' : 'text-muted'
+                  isLiked ? 'text-foreground font-medium' : 'text-muted'
                 }`}
               >
-                <Heart className={`w-4.5 h-4.5 ${isLiked ? 'fill-foreground stroke-foreground' : ''}`} />
+                <Heart className={`w-4.5 h-4.5 transition-colors ${isLiked ? 'fill-red-500 stroke-red-500 text-red-500' : ''}`} />
                 <span>Like ({article.likes_count})</span>
               </button>
 

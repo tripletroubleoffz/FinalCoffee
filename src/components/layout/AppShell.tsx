@@ -147,7 +147,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-3">
           <div className="relative w-20 h-20 animate-spin">
-            <Image src="/logo.png" alt="Loading" fill sizes="80px" className="object-contain dark:invert" />
+            <Image src="/logo.png" alt="Loading" fill sizes="80px" className="object-contain dark:invert" priority />
           </div>
           <span className="text-sm font-medium animate-pulse">Brewing FilterCoffee...</span>
         </div>
@@ -162,7 +162,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen items-center justify-center p-4 bg-background">
         <div className="w-full max-w-md p-6 rounded-lg border border-border bg-card text-center flex flex-col gap-6">
           <div className="relative w-28 h-28 mx-auto">
-            <Image src="/logo.png" alt="Logo" fill sizes="112px" className="object-contain dark:invert" />
+            <Image src="/logo.png" alt="Logo" fill sizes="112px" className="object-contain dark:invert" priority />
           </div>
           <div className="flex flex-col gap-2">
             <h2 className="text-xl font-bold">Authentication Required</h2>
@@ -204,6 +204,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 fill
                 sizes="144px"
                 className="object-contain object-left dark:invert"
+                priority
               />
             </div>
           </Link>
@@ -329,6 +330,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       fill
                       sizes="128px"
                       className="object-contain object-left dark:invert"
+                      priority
                     />
                   </div>
                 </Link>

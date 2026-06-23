@@ -87,7 +87,7 @@ export default function SignupPage() {
             {/* Header info */}
             <div className="flex flex-col items-center gap-2 text-center">
               <Link href="/" className="relative w-12 h-12 mb-2 focus:outline-none">
-                <Image src="/logo.png" alt="Logo" fill sizes="48px" className="object-contain dark:invert" />
+                <Image src="/logo.png" alt="Logo" fill sizes="48px" className="object-contain dark:invert" priority />
               </Link>
               <h1 className="text-xl font-bold tracking-tight">Create Your Account</h1>
               <p className="text-xs text-muted leading-relaxed">
