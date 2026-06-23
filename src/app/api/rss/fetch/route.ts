@@ -2,11 +2,6 @@ import { NextResponse } from 'next/server';
 import Parser from 'rss-parser';
 import { Client } from 'pg';
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not defined');
-}
-
 function decodeHTMLEntities(text: string): string {
   return (text || '')
     .replace(/&amp;/g, '&')
@@ -120,6 +115,15 @@ async function scrapeArticleData(url: string): Promise<ScrapedData> {
 }
 
 export async function POST() {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.warn('[RSS Ingestion] DATABASE_URL env variable is not set. Skipping DB operations.');
+    return NextResponse.json({ 
+      success: false, 
+      message: 'DATABASE_URL environment variable is not defined.' 
+    }, { status: 500 });
+  }
+
   const parser = new Parser();
   const pgClient = new Client({ connectionString });
   
