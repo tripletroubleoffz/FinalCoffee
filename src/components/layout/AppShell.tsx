@@ -207,6 +207,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 sizes="144px"
                 className="object-contain object-left dark:invert"
                 priority
+                loading="eager"
               />
             </div>
           </Link>

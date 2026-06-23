@@ -229,36 +229,17 @@ export function AudioPlayer({ article }: AudioPlayerProps) {
         </div>
       </div>
 
-      {/* Transcript & Summary side-by-side splits */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Summary Card */}
-        <div className="p-6 rounded-lg border border-border bg-card flex flex-col gap-4">
-          <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground border-b border-border pb-2">
-            Brew Summary
-          </h4>
-          <div className="text-sm leading-relaxed text-muted-foreground">
-            {article ? (
-              <p>{article.summary}</p>
-            ) : (
-              <p className="italic text-xs">Select an article to load summary...</p>
-            )}
-          </div>
-        </div>
-
-        {/* Transcript Card */}
-        <div className="p-6 rounded-lg border border-border bg-card flex flex-col gap-4">
-          <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground border-b border-border pb-2">
-            Live Transcript
-          </h4>
-          <div className="text-sm leading-relaxed text-muted-foreground max-h-48 overflow-y-auto pr-2">
-            {article ? (
-              <p className="whitespace-pre-line">
-                {article.transcript || `${article.headline}. ${article.summary}`}
-              </p>
-            ) : (
-              <p className="italic text-xs">Select an article to load transcript...</p>
-            )}
-          </div>
+      {/* Summary Card */}
+      <div className="p-6 rounded-lg border border-border bg-card flex flex-col gap-4">
+        <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground border-b border-border pb-2">
+          Brew Summary
+        </h4>
+        <div className="text-sm leading-relaxed text-muted-foreground">
+          {article ? (
+            <p className="whitespace-pre-line">{article.summary}</p>
+          ) : (
+            <p className="italic text-xs">Select an article to load summary...</p>
+          )}
         </div>
       </div>
     </div>

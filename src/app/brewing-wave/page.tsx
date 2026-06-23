@@ -23,7 +23,7 @@ export default function BrewingWavePage() {
     try {
       const { data, error } = await supabase
         .from('articles')
-        .select('id, category, headline, duration, audio_url, transcript, created_at, likes_count')
+        .select('id, category, headline, summary, duration, audio_url, transcript, created_at, likes_count')
         .gte('created_at', '2026-06-01T00:00:00Z')
         .order('created_at', { ascending: false });
 

@@ -5,7 +5,7 @@ import { Article } from '@/context/AppContext';
 import { Heart, Bookmark, Eye, X } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
-const isPlaceholderImage = (url: string | null | undefined): boolean => {
+export const isPlaceholderImage = (url: string | null | undefined): boolean => {
   if (!url) return true;
   const lower = url.toLowerCase();
   // Only block URLs that are purely generic/blank placeholder images
@@ -19,6 +19,25 @@ const isPlaceholderImage = (url: string | null | undefined): boolean => {
     lower.startsWith('data:image/svg')
   );
 };
+
+function decodeHTMLEntities(text: string): string {
+  return (text || '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#x2F;/g, '/')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x60;/g, '`')
+    .replace(/&#x3D;/g, '=')
+    .replace(/&#\d+;/g, (match) => {
+      const code = parseInt(match.match(/\d+/)?.[0] || '0', 10);
+      return String.fromCharCode(code);
+    });
+}
+
 
 interface NewsCardProps {
   article: Article;
@@ -55,6 +74,17 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
     }
   }, [detailsOpen, article.id, content]);
 
+  useEffect(() => {
+    if (detailsOpen) {
+      setModalImageError(false);
+      setImageError(false);
+    }
+  }, [detailsOpen]);
+
+  useEffect(() => {
+    console.log(`[NewsCard Debug] ID: ${article.id} | Headline: "${article.headline.substring(0, 30)}" | HasImage: ${!!article.image_url} | URL: ${article.image_url || 'null'} | imgErr: ${imageError} | modalErr: ${modalImageError} | isPlaceholder: ${isPlaceholderImage(article.image_url)}`);
+  }, [article.id, article.headline, article.image_url, imageError, modalImageError]);
+
 
   return (
     <>
@@ -76,24 +106,22 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
           {/* Title & description */}
           <div className="flex flex-col gap-2">
             <h3 className="text-lg font-bold group-hover:text-muted transition-colors leading-snug">
-              {article.headline}
+              {decodeHTMLEntities(article.headline)}
             </h3>
-            <p className={`text-sm text-muted-foreground leading-relaxed ${
-              article.image_url && !imageError && !isPlaceholderImage(article.image_url)
-                ? 'line-clamp-3'
-                : 'line-clamp-8'
-            }`}>
-              {article.summary}
-            </p>
-            {article.image_url && !imageError && !isPlaceholderImage(article.image_url) && (
+            {article.image_url && !imageError && !isPlaceholderImage(article.image_url) ? (
               <div className="relative w-full h-40 rounded-md overflow-hidden mt-2 border border-border bg-muted">
                 <img
-                  src={article.image_url}
+                  src={decodeHTMLEntities(article.image_url)}
                   alt={article.headline}
                   className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                  referrerPolicy="no-referrer"
                   onError={() => setImageError(true)}
                 />
               </div>
+            ) : (
+              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-8">
+                {decodeHTMLEntities(article.summary)}
+              </p>
             )}
           </div>
         </div>
@@ -166,7 +194,7 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
             {/* Headline */}
             <div className="flex flex-col gap-2">
               <h2 className="text-2xl font-extrabold leading-tight">
-                {article.headline}
+                {decodeHTMLEntities(article.headline)}
               </h2>
               <span className="text-xs text-muted">
                 Published {new Date(article.created_at).toLocaleDateString(undefined, {
@@ -182,9 +210,10 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
             {article.image_url && !modalImageError && !isPlaceholderImage(article.image_url) && (
               <div className="relative w-full h-72 rounded-lg overflow-hidden border border-border bg-muted -mx-0">
                 <img
-                  src={article.image_url}
+                  src={decodeHTMLEntities(article.image_url)}
                   alt={article.headline}
                   className="object-cover w-full h-full"
+                  referrerPolicy="no-referrer"
                   onError={() => setModalImageError(true)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
@@ -211,13 +240,13 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
                       key={index} 
                       className={index === 0 ? "font-medium text-foreground" : "whitespace-pre-line"}
                     >
-                      {trimmed}
+                      {decodeHTMLEntities(trimmed)}
                     </p>
                   );
                 })
               ) : (
                 <p className="font-medium text-foreground">
-                  {article.summary}
+                  {decodeHTMLEntities(article.summary)}
                 </p>
               )}
             </div>

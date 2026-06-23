@@ -29,13 +29,13 @@
 /* Default Theme is Dark Mode */
 :root:not(.light),
 .dark {
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #111827; /* gray-900 */
-  --card-hover: #1f2937; /* gray-800 */
-  --border: #1f2937; /* gray-800 */
-  --muted: #9ca3af; /* gray-400 */
-  --muted-foreground: #d1d5db; /* gray-300 */
+  --background: #090504;
+  --foreground: #f5efe3;
+  --card: #120d0b;
+  --card-hover: #1c1512;
+  --border: #221916;
+  --muted: #9a8b84;
+  --muted-foreground: #d2c6bf;
 }
 
 /* Accessibility Focus States */

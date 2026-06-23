@@ -170,25 +170,25 @@ export async function POST() {
                 // Parse image URL from the feed first
                 let image_url = null;
                 if (item.enclosure && item.enclosure.url && item.enclosure.type && item.enclosure.type.startsWith('image/')) {
-                  image_url = item.enclosure.url;
+                  image_url = decodeHTMLEntities(item.enclosure.url);
                 } else {
                   const imgMatch = rawContent.match(/<img[^>]+src="([^">]+)"/);
                   if (imgMatch && imgMatch[1]) {
-                    image_url = imgMatch[1];
+                    image_url = decodeHTMLEntities(imgMatch[1]);
                   }
                 }
 
                 const summary = cleanAndFormatText(rawSummary);
                 let content = cleanAndFormatText(rawContent);
 
-                // If parsed content is less than 500 characters, scrape it directly from the webpage
-                if (content.length < 500) {
+                // If parsed content is less than 500 characters OR we have no cover image, scrape the webpage
+                if (content.length < 500 || !image_url) {
                   const scraped = await scrapeArticleData(link);
-                  if (scraped.content.length >= 500) {
+                  if (scraped.content.length >= 500 && content.length < 500) {
                     content = scraped.content;
-                    if (scraped.imageUrl && !image_url) {
-                      image_url = scraped.imageUrl;
-                    }
+                  }
+                  if (scraped.imageUrl && !image_url) {
+                    image_url = scraped.imageUrl;
                   }
                 }
 
@@ -224,27 +224,45 @@ export async function POST() {
           for (const item of scrapedChunk) {
             if (!item) continue;
             try {
-              const queryText = `
-                INSERT INTO public.articles (category, headline, summary, content, image_url, created_at, likes_count)
-                VALUES ($1, $2, $3, $4, $5, $6, 0)
-                ON CONFLICT (headline) DO UPDATE SET
-                  category = EXCLUDED.category,
-                  summary = EXCLUDED.summary,
-                  content = EXCLUDED.content,
-                  image_url = COALESCE(EXCLUDED.image_url, public.articles.image_url)
-                RETURNING id;
-              `;
+              // Check if an article with the exact headline already exists
+              const checkRes = await pgClient.query(
+                'SELECT id, image_url FROM public.articles WHERE headline = $1 LIMIT 1',
+                [item.headline]
+              );
 
-              const res = await pgClient.query(queryText, [
-                item.category,
-                item.headline,
-                item.summary.substring(0, 1000), // Protect database constraint sizing
-                item.content,
-                item.image_url,
-                item.created_at
-              ]);
+              const summaryText = item.summary.substring(0, 1000);
 
-              if (res.rowCount && res.rowCount > 0) {
+              if (checkRes.rowCount && checkRes.rowCount > 0) {
+                // Update existing article
+                const existingArticle = checkRes.rows[0];
+                const resolvedImageUrl = item.image_url || existingArticle.image_url;
+
+                await pgClient.query(
+                  `UPDATE public.articles 
+                   SET category = $1, summary = $2, content = $3, image_url = $4 
+                   WHERE id = $5`,
+                  [
+                    item.category,
+                    summaryText,
+                    item.content,
+                    resolvedImageUrl,
+                    existingArticle.id
+                  ]
+                );
+              } else {
+                // Insert new article
+                await pgClient.query(
+                  `INSERT INTO public.articles (category, headline, summary, content, image_url, created_at, likes_count)
+                   VALUES ($1, $2, $3, $4, $5, $6, 0)`,
+                  [
+                    item.category,
+                    item.headline,
+                    summaryText,
+                    item.content,
+                    item.image_url,
+                    item.created_at
+                  ]
+                );
                 totalImported++;
               }
             } catch (dbErr: any) {
