@@ -78,7 +78,11 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
             <h3 className="text-lg font-bold group-hover:text-muted transition-colors leading-snug">
               {article.headline}
             </h3>
-            <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+            <p className={`text-sm text-muted-foreground leading-relaxed ${
+              article.image_url && !imageError && !isPlaceholderImage(article.image_url)
+                ? 'line-clamp-3'
+                : 'line-clamp-8'
+            }`}>
               {article.summary}
             </p>
             {article.image_url && !imageError && !isPlaceholderImage(article.image_url) && (
