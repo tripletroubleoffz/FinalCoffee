@@ -15,16 +15,15 @@ export function Header() {
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo Branding */}
           <Link href="/" className="flex items-center focus:outline-none">
-            <div className="relative w-40 h-11 flex-shrink-0">
-              <Image
-                src="/logo.png"
-                alt="FilterCoffee Logo"
-                fill
-                sizes="(max-width: 768px) 100vw, 160px"
-                className="object-contain object-left dark:invert"
-                priority
-              />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="FilterCoffee Logo"
+              width={92}
+              height={40}
+              className="object-contain object-left dark:invert h-auto"
+              style={{ height: 'auto' }}
+              priority
+            />
           </Link>
 
           {/* Center Navigation */}

@@ -25,14 +25,14 @@ export default function BrewingRoomPage() {
     try {
       const { data, error } = await supabase
         .from('articles')
-        .select('id, category, headline, summary, content, image_url, likes_count, created_at')
+        .select('id, category, headline, summary, content, image_url, likes_count, created_at, link')
         .gte('created_at', '2026-06-01T00:00:00Z')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
       // Enforce the 500 character content requirement
-      const validArticles = (data as Article[] || []).filter(
+      const validArticles = ((data as unknown as Article[]) || []).filter(
         (a) => a.content && a.content.trim().length >= 500
       );
       setArticles(validArticles);

@@ -19,12 +19,12 @@ export default function HomePage() {
       // Fetch articles created since the company startup date of June 1, 2026
       const { data, error } = await supabase
         .from('articles')
-        .select('id, category, headline, summary, image_url, likes_count, created_at')
+        .select('id, category, headline, summary, image_url, likes_count, created_at, link')
         .gte('created_at', '2026-06-01T00:00:00Z')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      const allArticles = (data as Article[] || []);
+      const allArticles = ((data as unknown as Article[]) || []);
 
       // 1. Hot news: top 15 latest overall (since June 1, 2026)
       const hotNews = allArticles.slice(0, 15);

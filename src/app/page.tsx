@@ -575,7 +575,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <Link
-              href="/signup"
+              href={user ? "/home" : "/signup"}
               className="w-full text-center py-2.5 rounded-md border border-foreground bg-background text-foreground font-semibold text-sm hover:bg-foreground hover:text-background transition-colors focus:outline-none"
             >
               Get Started
@@ -616,7 +616,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <Link
-              href="/signup"
+              href={user ? "/home" : "/signup"}
               className="w-full text-center py-2.5 rounded-md border border-foreground bg-foreground text-background font-semibold text-sm hover:opacity-90 transition-opacity focus:outline-none"
             >
               Upgrade Now

@@ -30,8 +30,8 @@ export default function ForgotPasswordPage() {
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md border border-border bg-card p-6 md:p-8 rounded-lg shadow-xl flex flex-col gap-6">
           <div className="flex flex-col items-center gap-2 text-center">
-            <Link href="/" className="relative w-12 h-12 mb-2 focus:outline-none">
-              <Image src="/logo.png" alt="Logo" fill sizes="48px" className="object-contain dark:invert" priority />
+            <Link href="/" className="mb-2 focus:outline-none">
+              <Image src="/logo.png" alt="Logo" width={92} height={40} className="object-contain dark:invert h-auto" style={{ height: 'auto' }} priority />
             </Link>
             <h1 className="text-xl font-bold tracking-tight">Reset Password</h1>
             <p className="text-xs text-muted leading-relaxed max-w-xs">

@@ -12,9 +12,7 @@ export default function OnboardingPage() {
       {/* Top navbar bar */}
       <div className="sticky top-0 z-10 flex h-16 w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-md px-6">
         <div className="flex items-center">
-          <div className="relative w-20 h-6">
-            <Image src="/logo.png" alt="Logo" fill sizes="80px" className="object-contain object-left dark:invert" priority />
-          </div>
+          <Image src="/logo.png" alt="Logo" width={92} height={40} className="object-contain object-left dark:invert h-auto" style={{ height: 'auto' }} priority />
         </div>
         <ThemeToggle />
       </div>

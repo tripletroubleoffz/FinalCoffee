@@ -148,8 +148,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-3">
-          <div className="relative w-20 h-20 animate-spin">
-            <Image src="/logo.png" alt="Loading" fill sizes="80px" className="object-contain dark:invert" />
+          <div className="animate-spin">
+            <Image src="/logo.png" alt="Loading" width={80} height={35} className="object-contain dark:invert h-auto" style={{ height: 'auto' }} />
           </div>
           <span className="text-sm font-medium animate-pulse">Brewing FilterCoffee...</span>
         </div>
@@ -163,9 +163,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4 bg-background">
         <div className="w-full max-w-md p-6 rounded-lg border border-border bg-card text-center flex flex-col gap-6">
-          <div className="relative w-28 h-28 mx-auto">
-            <Image src="/logo.png" alt="Logo" fill sizes="112px" className="object-contain dark:invert" />
-          </div>
+          <Image src="/logo.png" alt="Logo" width={112} height={49} className="object-contain dark:invert mx-auto h-auto" style={{ height: 'auto' }} />
           <div className="flex flex-col gap-2">
             <h2 className="text-xl font-bold">Authentication Required</h2>
             <p className="text-sm text-muted">
@@ -199,17 +197,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Logo Branding */}
           <Link href="/" className="flex items-center focus:outline-none">
-            <div className="relative w-36 h-10">
-              <Image
-                src="/logo.png"
-                alt="FilterCoffee Logo"
-                fill
-                sizes="144px"
-                className="object-contain object-left dark:invert"
-                priority
-                loading="eager"
-              />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="FilterCoffee Logo"
+              width={92}
+              height={40}
+              className="object-contain object-left dark:invert h-auto"
+              style={{ height: 'auto' }}
+              priority
+            />
           </Link>
         </div>
 
@@ -326,15 +322,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center focus:outline-none"
                 >
-                  <div className="relative w-32 h-9">
-                    <Image
-                      src="/logo.png"
-                      alt="FilterCoffee"
-                      fill
-                      sizes="128px"
-                      className="object-contain object-left dark:invert"
-                    />
-                  </div>
+                  <Image
+                    src="/logo.png"
+                    alt="FilterCoffee"
+                    width={92}
+                    height={40}
+                    className="object-contain object-left dark:invert h-auto"
+                    style={{ height: 'auto' }}
+                  />
                 </Link>
                 <button
                   onClick={() => setMobileMenuOpen(false)}

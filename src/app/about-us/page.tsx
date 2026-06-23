@@ -32,16 +32,15 @@ function AboutUsContent() {
 
         {/* Company Logo illustration */}
         <div className="w-full md:w-80 h-64 rounded-lg border border-border bg-card flex items-center justify-center p-6 relative overflow-hidden">
-          <div className="relative w-full h-full max-w-[200px] max-h-[80px]">
-            <Image
-              src="/logo.png"
-              alt="FilterCoffee Logo"
-              fill
-              sizes="200px"
-              className="object-contain dark:invert"
-              priority
-            />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="FilterCoffee Logo"
+            width={200}
+            height={87}
+            className="object-contain dark:invert h-auto"
+            style={{ height: 'auto' }}
+            priority
+          />
         </div>
       </div>
 

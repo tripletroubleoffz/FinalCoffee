@@ -38,6 +38,26 @@ function decodeHTMLEntities(text: string): string {
     });
 }
 
+function getImageSource(link: string | null | undefined): string {
+  if (!link) return '';
+  const lower = link.toLowerCase();
+  if (lower.includes('theverge.com')) return 'The Verge';
+  if (lower.includes('techcrunch.com')) return 'TechCrunch';
+  if (lower.includes('technologyreview.com')) return 'MIT Technology Review';
+  if (lower.includes('saastr.com')) return 'SaaStr';
+  if (lower.includes('wired.com')) return 'Wired';
+  if (lower.includes('aws.amazon.com') || lower.includes('amazon.com')) return 'AWS';
+  if (lower.includes('cloudflare.com')) return 'Cloudflare';
+  if (lower.includes('krebsonsecurity.com')) return 'Krebs on Security';
+  
+  try {
+    const url = new URL(link);
+    const host = url.hostname.replace('www.', '');
+    return host.charAt(0).toUpperCase() + host.slice(1);
+  } catch (e) {
+    return '';
+  }
+}
 
 interface NewsCardProps {
   article: Article;
@@ -88,7 +108,10 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
 
   return (
     <>
-      <article className="group flex flex-col justify-between p-5 rounded-lg border border-border bg-card hover:bg-card-hover transition-all duration-200 focus-within:ring-2 focus-within:ring-foreground">
+      <article 
+        onClick={() => setDetailsOpen(true)}
+        className="group flex flex-col justify-between p-5 rounded-lg border border-border bg-card hover:bg-card-hover cursor-pointer transition-all duration-200 focus-within:ring-2 focus-within:ring-foreground"
+      >
         <div className="flex flex-col gap-3">
           {/* Top metadata badge */}
           <div className="flex items-center justify-between gap-2">
@@ -109,14 +132,21 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
               {decodeHTMLEntities(article.headline)}
             </h3>
             {article.image_url && !imageError && !isPlaceholderImage(article.image_url) ? (
-              <div className="relative w-full h-40 rounded-md overflow-hidden mt-2 border border-border bg-muted">
-                <img
-                  src={decodeHTMLEntities(article.image_url)}
-                  alt={article.headline}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                  referrerPolicy="no-referrer"
-                  onError={() => setImageError(true)}
-                />
+              <div className="flex flex-col gap-1.5 mt-2">
+                <div className="relative w-full h-40 rounded-md overflow-hidden border border-border bg-muted">
+                  <img
+                    src={decodeHTMLEntities(article.image_url)}
+                    alt={article.headline}
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                    referrerPolicy="no-referrer"
+                    onError={() => setImageError(true)}
+                  />
+                </div>
+                {getImageSource(article.link) && (
+                  <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider text-right pr-1">
+                    Image: {getImageSource(article.link)}
+                  </span>
+                )}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground leading-relaxed line-clamp-8">
@@ -128,42 +158,32 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
 
         {/* Action controls */}
         <div className="mt-5 pt-4 border-t border-border flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onLike();
-              }}
-              className={`flex items-center gap-1.5 text-xs font-medium p-1.5 rounded-md hover:bg-border transition-colors ${
-                isLiked ? 'text-foreground font-semibold' : 'text-muted'
-              }`}
-              aria-label={isLiked ? 'Unlike article' : 'Like article'}
-            >
-              <Heart className={`w-4.5 h-4.5 transition-colors ${isLiked ? 'fill-red-500 stroke-red-500 text-red-500' : ''}`} />
-              <span>{article.likes_count}</span>
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onSave();
-              }}
-              className={`flex items-center gap-1.5 text-xs font-medium p-1.5 rounded-md hover:bg-border transition-colors ${
-                isSaved ? 'text-foreground font-semibold' : 'text-muted'
-              }`}
-              aria-label={isSaved ? 'Remove from saved' : 'Save article'}
-            >
-              <Bookmark className={`w-4.5 h-4.5 ${isSaved ? 'fill-foreground stroke-foreground' : ''}`} />
-              <span>{isSaved ? 'Saved' : 'Save'}</span>
-            </button>
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onLike();
+            }}
+            className={`flex items-center gap-1.5 text-xs font-medium p-1.5 rounded-md hover:bg-border transition-colors ${
+              isLiked ? 'text-foreground font-semibold' : 'text-muted'
+            }`}
+            aria-label={isLiked ? 'Unlike article' : 'Like article'}
+          >
+            <Heart className={`w-4.5 h-4.5 transition-colors ${isLiked ? 'fill-red-500 stroke-red-500 text-red-500' : ''}`} />
+            <span>{article.likes_count} {article.likes_count === 1 ? 'Like' : 'Likes'}</span>
+          </button>
 
           <button
-            onClick={() => setDetailsOpen(true)}
-            className="flex items-center gap-1 text-xs font-semibold border border-foreground/20 bg-background text-foreground hover:bg-foreground hover:text-background px-3 py-1.5 rounded-md transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSave();
+            }}
+            className={`flex items-center gap-1.5 text-xs font-medium p-1.5 rounded-md hover:bg-border transition-colors ${
+              isSaved ? 'text-foreground font-semibold' : 'text-muted'
+            }`}
+            aria-label={isSaved ? 'Remove from saved' : 'Save article'}
           >
-            <Eye className="w-3.5 h-3.5" />
-            Read More
+            <Bookmark className={`w-4.5 h-4.5 ${isSaved ? 'fill-foreground stroke-foreground' : ''}`} />
+            <span>{isSaved ? 'Saved' : 'Save'}</span>
           </button>
         </div>
       </article>
@@ -208,15 +228,22 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
 
             {/* Hero Image — shown right below headline */}
             {article.image_url && !modalImageError && !isPlaceholderImage(article.image_url) && (
-              <div className="relative w-full h-72 rounded-lg overflow-hidden border border-border bg-muted -mx-0">
-                <img
-                  src={decodeHTMLEntities(article.image_url)}
-                  alt={article.headline}
-                  className="object-cover w-full h-full"
-                  referrerPolicy="no-referrer"
-                  onError={() => setModalImageError(true)}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+              <div className="flex flex-col gap-2">
+                <div className="relative w-full h-72 rounded-lg overflow-hidden border border-border bg-muted -mx-0">
+                  <img
+                    src={decodeHTMLEntities(article.image_url)}
+                    alt={article.headline}
+                    className="object-cover w-full h-full"
+                    referrerPolicy="no-referrer"
+                    onError={() => setModalImageError(true)}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                </div>
+                {getImageSource(article.link) && (
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider text-right pr-1">
+                    Image: {getImageSource(article.link)}
+                  </span>
+                )}
               </div>
             )}
 

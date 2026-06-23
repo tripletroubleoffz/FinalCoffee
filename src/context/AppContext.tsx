@@ -33,6 +33,7 @@ export interface Article {
   transcript: string | null;
   likes_count: number;
   created_at: string;
+  link?: string | null;
 }
 
 interface AppContextType {

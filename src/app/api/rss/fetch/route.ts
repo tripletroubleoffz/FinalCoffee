@@ -181,14 +181,11 @@ export async function POST() {
                 const summary = cleanAndFormatText(rawSummary);
                 let content = cleanAndFormatText(rawContent);
 
-                // If parsed content is less than 500 characters OR we have no cover image, scrape the webpage
-                if (content.length < 500 || !image_url) {
+                // If parsed content is less than 500 characters, scrape the webpage for content only
+                if (content.length < 500) {
                   const scraped = await scrapeArticleData(link);
-                  if (scraped.content.length >= 500 && content.length < 500) {
+                  if (scraped.content.length >= 500) {
                     content = scraped.content;
-                  }
-                  if (scraped.imageUrl && !image_url) {
-                    image_url = scraped.imageUrl;
                   }
                 }
 

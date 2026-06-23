@@ -27,13 +27,13 @@ export default function SavedBrewPage() {
       // Query Supabase for articles whose ID is in our bookmark list
       const { data, error } = await supabase
         .from('articles')
-        .select('id, category, headline, summary, image_url, likes_count, created_at')
+        .select('id, category, headline, summary, image_url, likes_count, created_at, link')
         .in('id', idsArray)
         .gte('created_at', '2026-06-01T00:00:00Z')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSavedArticles(data as Article[] || []);
+      setSavedArticles((data as unknown as Article[]) || []);
     } catch (err) {
       console.error('Failed to load bookmarked articles:', err);
     } finally {

@@ -700,7 +700,13 @@ function AdminPageContent() {
                       <tr key={log.id}>
                         <td className="p-2.5 text-foreground">{new Date(log.created_at).toLocaleString()}</td>
                         <td className="p-2.5">
-                          <span className={`px-1.5 py-0.5 rounded font-bold ${log.status === 'SUCCESS' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                          <span className={`px-1.5 py-0.5 rounded font-bold ${
+                            log.status === 'SUCCESS'
+                              ? 'bg-green-500/10 text-green-500'
+                              : log.status === 'PARTIAL'
+                              ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+                              : 'bg-red-500/10 text-red-500'
+                          }`}>
                             {log.status}
                           </span>
                         </td>
