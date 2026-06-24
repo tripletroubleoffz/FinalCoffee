@@ -5,7 +5,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { NewsCard } from '@/components/cards/NewsCard';
 import { useApp, Article } from '@/context/AppContext';
 import { supabase } from '@/lib/supabaseClient';
-import { Search, SlidersHorizontal, RefreshCw, X, Calendar, Tag } from 'lucide-react';
+import { Search, RefreshCw, X, Calendar, Tag, SlidersHorizontal } from 'lucide-react';
 
 export default function BrewingRoomPage() {
   const { savedArticleIds, likedArticleIds, toggleSaveArticle, toggleLikeArticle } = useApp();
@@ -18,7 +18,6 @@ export default function BrewingRoomPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState<'All' | 'Today' | 'This Week' | 'This Month'>('All');
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
-  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const fetchArticles = async () => {
     setLoading(true);
@@ -111,93 +110,77 @@ export default function BrewingRoomPage() {
           </p>
         </div>
 
-        {/* Search & Main Filter Row */}
+        {/* Search & Filters — always visible */}
         <div className="flex flex-col gap-4">
-          <div className="flex gap-2">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search headlines, summaries, categories..."
-                className="w-full h-10 pl-9 pr-4 rounded-md border border-border bg-card text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-              />
-              <Search className="absolute left-3 top-3 w-4 h-4 text-muted" />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-3 p-0.5 rounded-full hover:bg-border text-muted"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
 
-            {/* Advanced Toggle */}
-            <button
-              onClick={() => setAdvancedOpen(!advancedOpen)}
-              className={`h-10 px-4 rounded-md border flex items-center gap-2 text-xs font-semibold transition-colors focus:outline-none ${
-                advancedOpen
-                  ? 'border-foreground bg-foreground text-background'
-                  : 'border-border bg-card hover:bg-card-hover text-foreground'
-              }`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              <span className="hidden sm:inline">Advanced Filters</span>
-            </button>
+          {/* Search Input */}
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search headlines, summaries, categories..."
+              className="w-full h-10 pl-9 pr-4 rounded-md border border-border bg-card text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+            />
+            <Search className="absolute left-3 top-3 w-4 h-4 text-muted" />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-3 p-0.5 rounded-full hover:bg-border text-muted"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Advanced Filters Panel */}
-          {advancedOpen && (
-            <div className="p-5 rounded-lg border border-border bg-card grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-200">
-              
-              {/* Time Filters */}
-              <div className="flex flex-col gap-2.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4" /> Filter by Time
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {(['All', 'Today', 'This Week', 'This Month'] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setTimeFilter(t)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
-                        timeFilter === t
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'border-border bg-background hover:bg-card-hover text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
+          {/* Filters Panel — always visible */}
+          <div className="p-5 rounded-lg border border-border bg-card grid grid-cols-1 sm:grid-cols-2 gap-6">
+            
+            {/* Time Filters */}
+            <div className="flex flex-col gap-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" /> Filter by Time
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {(['All', 'Today', 'This Week', 'This Month'] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTimeFilter(t)}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
+                      timeFilter === t
+                        ? 'border-foreground bg-foreground text-background'
+                        : 'border-border bg-background hover:bg-card-hover text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
               </div>
-
-              {/* Category Filters */}
-              <div className="flex flex-col gap-2.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Tag className="w-4 h-4" /> Filter by Category
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {['All', 'Technology', 'AI', 'Finance', 'Startups', 'Business'].map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setCategoryFilter(c)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
-                        categoryFilter === c
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'border-border bg-background hover:bg-card-hover text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
             </div>
-          )}
+
+            {/* Category Filters */}
+            <div className="flex flex-col gap-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Tag className="w-4 h-4" /> Filter by Category
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {['All', 'Technology', 'AI', 'Finance', 'Startups', 'Business'].map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCategoryFilter(c)}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
+                      categoryFilter === c
+                        ? 'border-foreground bg-foreground text-background'
+                        : 'border-border bg-background hover:bg-card-hover text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          </div>
 
           {/* Filter Status Bar */}
           {hasActiveFilters && (

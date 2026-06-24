@@ -46,6 +46,7 @@ function DeveloperPageContent() {
       const { data, error } = await supabase
         .from('rss_ingestion_logs')
         .select('*')
+        .neq('status', 'CLEANUP')
         .order('created_at', { ascending: false })
         .limit(5);
       
@@ -291,7 +292,11 @@ function DeveloperPageContent() {
                     <tr key={log.id}>
                       <td className="p-2.5 text-foreground">{new Date(log.created_at).toLocaleString()}</td>
                       <td className="p-2.5">
-                        <span className={`px-1.5 py-0.5 rounded font-bold ${log.status === 'SUCCESS' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                        <span className={`px-1.5 py-0.5 rounded font-bold ${
+                          log.status === 'SUCCESS' ? 'bg-green-500/10 text-green-500' 
+                          : log.status === 'PARTIAL' ? 'bg-yellow-500/10 text-yellow-500'
+                          : 'bg-red-500/10 text-red-500'
+                        }`}>
                           {log.status}
                         </span>
                       </td>

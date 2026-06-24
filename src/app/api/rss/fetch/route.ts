@@ -124,7 +124,22 @@ export async function POST() {
     }, { status: 500 });
   }
 
-  const parser = new Parser();
+  // Register media:content and media:thumbnail as custom fields so rss-parser
+  // exposes them on each item (used by TechCrunch, The Verge, Reuters, etc.).
+  // Also set browser-like headers so servers that block bot User-Agents (e.g. InfoQ 406)
+  // accept our requests.
+  const parser = new Parser({
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+      'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+    },
+    customFields: {
+      item: [
+        ['media:content',   'mediaContent',   { keepArray: false }],
+        ['media:thumbnail', 'mediaThumbnail', { keepArray: false }],
+      ]
+    }
+  });
   const pgClient = new Client({ connectionString });
   
   let totalImported = 0;
@@ -134,28 +149,45 @@ export async function POST() {
   try {
     await pgClient.connect();
     
-    // Storage optimization: cleanup unsaved articles older than the 15th of the next month.
-    // If we are past the 15th of the current month, delete everything before the 1st of the current month.
-    // Otherwise, delete everything before the 1st of the previous month.
+    // Storage cleanup runs at most once every 5 days.
+    // Check when the last cleanup was performed by looking at a dedicated log entry.
     const now = new Date();
-    let cutoffDate: Date;
-    if (now.getDate() > 15) {
-      cutoffDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
-    } else {
-      cutoffDate = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1));
-    }
+    const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
 
-    console.log(`[Storage Cleanup] Deleting unsaved articles older than ${cutoffDate.toISOString()}...`);
-    const cleanupRes = await pgClient.query(
-      `DELETE FROM public.articles a 
-       WHERE a.created_at < $1 
-       AND NOT EXISTS (
-         SELECT 1 FROM public.saved_articles s 
-         WHERE s.article_id = a.id
-       )`,
-      [cutoffDate]
+    const lastCleanupRes = await pgClient.query(
+      `SELECT created_at FROM public.rss_ingestion_logs
+       WHERE status = 'CLEANUP'
+       ORDER BY created_at DESC
+       LIMIT 1`
     );
-    console.log(`[Storage Cleanup] Done. Removed ${cleanupRes.rowCount} expired unsaved articles.`);
+
+    const lastCleanupAt: Date | null = lastCleanupRes.rows[0]?.created_at ?? null;
+    const shouldCleanup = !lastCleanupAt || lastCleanupAt < fiveDaysAgo;
+
+    if (shouldCleanup) {
+      // Delete unsaved articles older than the start of the previous month
+      const cutoffDate = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1));
+
+      console.log(`[Storage Cleanup] Running cleanup. Deleting unsaved articles older than ${cutoffDate.toISOString()}...`);
+      const cleanupRes = await pgClient.query(
+        `DELETE FROM public.articles a 
+         WHERE a.created_at < $1 
+         AND NOT EXISTS (
+           SELECT 1 FROM public.saved_articles s 
+           WHERE s.article_id = a.id
+         )`,
+        [cutoffDate]
+      );
+      console.log(`[Storage Cleanup] Done. Removed ${cleanupRes.rowCount} expired unsaved articles.`);
+
+      // Record that a cleanup was performed
+      await pgClient.query(
+        `INSERT INTO public.rss_ingestion_logs (status, items_imported, error_message)
+         VALUES ('CLEANUP', 0, NULL)`
+      );
+    } else {
+      console.log(`[Storage Cleanup] Skipped — last cleanup was ${lastCleanupAt?.toISOString()}. Next cleanup due after ${new Date(lastCleanupAt!.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString()}.`);
+    }
 
     // 1. Fetch configured RSS sources
     const { rows: sources } = await pgClient.query(
@@ -190,12 +222,23 @@ export async function POST() {
                 const rawSummary = item.contentSnippet || item.summary || item.content || '';
                 const rawContent = item.content || item.contentSnippet || rawSummary;
 
-                // Parse image URL from the feed first
-                let image_url = null;
-                if (item.enclosure && item.enclosure.url && item.enclosure.type && item.enclosure.type.startsWith('image/')) {
+                // ── Image: priority order ──────────────────────────────────────────
+                // 1. media:content / media:thumbnail  (TechCrunch, Verge, Reuters…)
+                // 2. RSS <enclosure> tag
+                // 3. <img> embedded in the raw RSS content snippet
+                // 4. og:image scraped from the article page (fallback, see below)
+                const mc = (item as any).mediaContent;
+                const mt = (item as any).mediaThumbnail;
+                let image_url: string | null = null;
+
+                if (mc && mc.$ && mc.$.url) {
+                  image_url = decodeHTMLEntities(mc.$.url);
+                } else if (mt && mt.$ && mt.$.url) {
+                  image_url = decodeHTMLEntities(mt.$.url);
+                } else if (item.enclosure && item.enclosure.url && item.enclosure.type && item.enclosure.type.startsWith('image/')) {
                   image_url = decodeHTMLEntities(item.enclosure.url);
                 } else {
-                  const imgMatch = rawContent.match(/<img[^>]+src="([^">]+)"/);
+                  const imgMatch = rawContent.match(/<img[^\>]+src="([^"\>]+)"/);
                   if (imgMatch && imgMatch[1]) {
                     image_url = decodeHTMLEntities(imgMatch[1]);
                   }
@@ -204,11 +247,18 @@ export async function POST() {
                 const summary = cleanAndFormatText(rawSummary);
                 let content = cleanAndFormatText(rawContent);
 
-                // If parsed content is less than 500 characters, scrape the webpage for content only
-                if (content.length < 500) {
+                // Scrape the article page when:
+                //   • content is too short (< 500 chars), OR
+                //   • we still have no image (og:image is the most reliable fallback)
+                // Both needs are handled in a single fetch to avoid double requests.
+                if (content.length < 500 || !image_url) {
                   const scraped = await scrapeArticleData(link);
                   if (scraped.content.length >= 500) {
                     content = scraped.content;
+                  }
+                  // Use scraped og:image only when RSS provided nothing
+                  if (!image_url && scraped.imageUrl) {
+                    image_url = scraped.imageUrl;
                   }
                 }
 

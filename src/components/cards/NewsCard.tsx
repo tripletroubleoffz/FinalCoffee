@@ -132,6 +132,7 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
               {decodeHTMLEntities(article.headline)}
             </h3>
             {article.image_url && !imageError && !isPlaceholderImage(article.image_url) ? (
+              /* ── Has a valid image → show it ── */
               <div className="flex flex-col gap-1.5 mt-2">
                 <div className="relative w-full h-40 rounded-md overflow-hidden border border-border bg-muted">
                   <img
@@ -150,9 +151,18 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-8">
-                {decodeHTMLEntities(article.summary)}
-              </p>
+              /* ── No image (or failed to load) → show rich content preview ── */
+              <div className="mt-2 rounded-md border border-border bg-background p-3.5 h-40 overflow-hidden relative">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {decodeHTMLEntities(
+                    article.content && article.content.trim().length > 80
+                      ? article.content.trim()
+                      : article.summary
+                  )}
+                </p>
+                {/* Fade-out at the bottom so the text doesn't cut harshly */}
+                <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+              </div>
             )}
           </div>
         </div>

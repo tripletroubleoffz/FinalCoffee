@@ -110,6 +110,7 @@ function AdminPageContent() {
       const { data, error } = await supabase
         .from('rss_ingestion_logs')
         .select('*')
+        .neq('status', 'CLEANUP')
         .order('created_at', { ascending: false })
         .limit(5);
       
