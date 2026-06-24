@@ -139,6 +139,7 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
                     alt={article.headline}
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                     referrerPolicy="no-referrer"
+                    loading="lazy"
                     onError={() => setImageError(true)}
                   />
                 </div>
@@ -196,7 +197,7 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
             onClick={() => setDetailsOpen(false)}
           />
           
-          <div className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-lg border border-border bg-card p-6 md:p-8 shadow-2xl z-10 flex flex-col gap-6 animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-lg border border-border bg-card p-4 sm:p-6 md:p-8 shadow-2xl z-10 flex flex-col gap-6 animate-in zoom-in-95 duration-200">
             {/* Header info */}
             <div className="flex items-center justify-between gap-4">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground border border-border px-2.5 py-0.5 rounded-full bg-background">
@@ -235,6 +236,7 @@ export function NewsCard({ article, isLiked, isSaved, onLike, onSave }: NewsCard
                     alt={article.headline}
                     className="object-cover w-full h-full"
                     referrerPolicy="no-referrer"
+                    loading="lazy"
                     onError={() => setModalImageError(true)}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />

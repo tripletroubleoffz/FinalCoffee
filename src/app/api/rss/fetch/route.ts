@@ -134,6 +134,29 @@ export async function POST() {
   try {
     await pgClient.connect();
     
+    // Storage optimization: cleanup unsaved articles older than the 15th of the next month.
+    // If we are past the 15th of the current month, delete everything before the 1st of the current month.
+    // Otherwise, delete everything before the 1st of the previous month.
+    const now = new Date();
+    let cutoffDate: Date;
+    if (now.getDate() > 15) {
+      cutoffDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
+    } else {
+      cutoffDate = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1));
+    }
+
+    console.log(`[Storage Cleanup] Deleting unsaved articles older than ${cutoffDate.toISOString()}...`);
+    const cleanupRes = await pgClient.query(
+      `DELETE FROM public.articles a 
+       WHERE a.created_at < $1 
+       AND NOT EXISTS (
+         SELECT 1 FROM public.saved_articles s 
+         WHERE s.article_id = a.id
+       )`,
+      [cutoffDate]
+    );
+    console.log(`[Storage Cleanup] Done. Removed ${cleanupRes.rowCount} expired unsaved articles.`);
+
     // 1. Fetch configured RSS sources
     const { rows: sources } = await pgClient.query(
       'SELECT id, name, url, category FROM public.rss_sources'
