@@ -14,16 +14,19 @@ const insights = [
     icon: Compass,
     title: 'Intelligence Across Every Horizon',
     description: 'We process publications across global tech hubs, research institutes, startup markets, and developer communities.',
+    href: '/brewing-room',
   },
   {
     icon: Layers,
     title: 'Intelligence That Matters',
     description: 'Our filters analyze relevance, citations, and product benchmarks, extracting actionable insights from the raw bean news.',
+    href: '/brewing-room',
   },
   {
     icon: ShieldCheck,
     title: 'From Noise To Clarity',
     description: 'Replace hours of reading with targeted 2-minute text summaries and professional voice newsletters synced to you.',
+    href: '/brewing-wave',
   },
 ];
 
@@ -481,7 +484,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <Link
-                  href="/signup"
+                  href={user ? item.href : '/login'}
                   className="inline-flex items-center gap-1 text-xs font-bold hover:text-muted transition-colors focus:outline-none"
                 >
                   Learn More <ArrowRight className="w-3.5 h-3.5" />
