@@ -156,18 +156,50 @@ export async function POST(req: NextRequest) {
       ]
     }
   });
-  const pgClient = new Client({ 
-    connectionString,
-    stream: (opts: any) => {
-      return net.connect({
-        port: opts.port,
-        host: opts.host,
-        lookup: (hostname: any, dnsOpts: any, callback: any) => {
-          dns.lookup(hostname, { family: 4 }, callback);
+  function getSecureConnectionString(connStr: string | undefined): { connectionString: string | undefined; ssl?: any } {
+    if (!connStr) return { connectionString: connStr };
+    try {
+      if (connStr.startsWith('postgresql://') || connStr.startsWith('postgres://')) {
+        const prefix = connStr.startsWith('postgresql://') ? 'postgresql://' : 'postgres://';
+        const remaining = connStr.substring(prefix.length);
+        const lastAtIndex = remaining.lastIndexOf('@');
+        if (lastAtIndex !== -1) {
+          const credentials = remaining.substring(0, lastAtIndex);
+          const hostPortDb = remaining.substring(lastAtIndex + 1);
+          
+          const credParts = credentials.split(':');
+          const user = credParts[0];
+          const password = credParts.slice(1).join(':');
+          
+          const hostPortDbParts = hostPortDb.split('/');
+          const hostPort = hostPortDbParts[0];
+          const dbNameQueryParams = hostPortDbParts.slice(1).join('/');
+          
+          const hostPortSplit = hostPort.split(':');
+          const host = hostPortSplit[0];
+          const port = hostPortSplit[1];
+          
+          const hostMatch = host.match(/^db\.([^.]+)\.supabase\.(co|net)$/);
+          if (hostMatch) {
+            const projectRef = hostMatch[1];
+            const region = projectRef === 'fqryrrlzajzagixmirpw' ? 'ap-northeast-1' : 'us-east-1';
+            const poolerHost = `aws-1-${region}.pooler.supabase.com`;
+            const poolerUser = `${user}.${projectRef}`;
+            return {
+              connectionString: `${prefix}${poolerUser}:${password}@${poolerHost}:6543/${dbNameQueryParams}`,
+              ssl: { rejectUnauthorized: false }
+            };
+          }
         }
-      });
+      }
+    } catch (err) {
+      console.error('Error parsing connection string:', err);
     }
-  } as any);
+    return { connectionString: connStr };
+  }
+
+  const secureConfig = getSecureConnectionString(connectionString);
+  const pgClient = new Client(secureConfig);
   
   let totalImported = 0;
   let hasErrors = false;
