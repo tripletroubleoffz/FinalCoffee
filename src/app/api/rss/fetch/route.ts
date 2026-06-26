@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import Parser from 'rss-parser';
 import { Client } from 'pg';
 
@@ -114,7 +114,15 @@ async function scrapeArticleData(url: string): Promise<ScrapedData> {
   }
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  // Validate authorization token if a secret key is defined in environment variables
+  const authHeader = req.headers.get('Authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    console.warn('[RSS Ingestion] Unauthorized fetch attempt.');
+    return NextResponse.json({ success: false, error: 'Unauthorized access token.' }, { status: 401 });
+  }
+
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     console.warn('[RSS Ingestion] DATABASE_URL env variable is not set. Skipping DB operations.');
@@ -388,7 +396,7 @@ export async function POST() {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   // Support GET triggers for cron schedulers
-  return POST();
+  return POST(req);
 }

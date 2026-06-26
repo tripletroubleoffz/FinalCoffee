@@ -1,0 +1,58 @@
+name: Scheduled RSS Ingest (Localhost Simulation)
+
+on:
+  schedule:
+    # Trigger workflow every 15 minutes
+    # Note: GitHub scheduled workflows can sometimes be delayed by 5-10 minutes depending on queue loads.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    # Allows you to trigger this workflow manually from the GitHub Actions tab to test it instantly
+
+jobs:
+  sync-rss:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Step 3: Install project dependencies
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      # Step 4: Setup Environment Variables
+      # We inject the database connection string and Supabase keys passed securely from GitHub Secrets
+      - name: Create .env.local File
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.local
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env.local
+          echo "CRON_SECRET=${{ secrets.CRON_SECRET }}" >> .env.local
+
+      # Step 5: Start the local Next.js dev server in the background and trigger the sync
+      # Since it runs on localhost inside the GitHub runner, it does not have the Vercel 10s timeout limit.
+      - name: Run Next.js Server & Trigger Ingestion
+        run: |
+          # 1. Start server in background
+          npm run dev &
+          
+          # 2. Loop until the local server is fully responsive (up to 60 seconds)
+          echo "Waiting for Next.js local server to start on port 3000..."
+          timeout 60s bash -c 'until curl -s http://localhost:3000 > /dev/null; do sleep 2; done'
+          echo "Next.js dev server is active!"
+          
+          # 3. Call the API route endpoint to fetch and parse the feeds
+          echo "Triggering RSS Ingestion route..."
+          curl -X POST "http://localhost:3000/api/rss/fetch" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --fail \
+            --verbose
+          echo "Sync completed successfully!"
