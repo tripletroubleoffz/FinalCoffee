@@ -160,7 +160,8 @@ export async function POST(req: NextRequest) {
     connectionString,
     stream: (opts: any) => {
       return net.connect({
-        ...opts,
+        port: opts.port,
+        host: opts.host,
         lookup: (hostname: any, dnsOpts: any, callback: any) => {
           dns.lookup(hostname, { family: 4 }, callback);
         }
