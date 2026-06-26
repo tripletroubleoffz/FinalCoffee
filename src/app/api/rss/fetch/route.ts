@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
   });
   const pgClient = new Client({ 
     connectionString,
-    lookup: (hostname, options, callback) => {
+    lookup: (hostname: any, options: any, callback: any) => {
       dns.lookup(hostname, { family: 4 }, callback);
     }
   } as any);
