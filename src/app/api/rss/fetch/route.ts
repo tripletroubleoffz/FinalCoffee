@@ -155,7 +155,12 @@ export async function POST(req: NextRequest) {
       ]
     }
   });
-  const pgClient = new Client({ connectionString });
+  const pgClient = new Client({ 
+    connectionString,
+    lookup: (hostname, options, callback) => {
+      dns.lookup(hostname, { family: 4 }, callback);
+    }
+  });
   
   let totalImported = 0;
   let hasErrors = false;
