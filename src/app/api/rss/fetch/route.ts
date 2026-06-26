@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Parser from 'rss-parser';
 import { Client } from 'pg';
 import dns from 'dns';
+import net from 'net';
 
 // Force DNS resolution to prioritize IPv4 over IPv6.
 // GitHub Actions runners do not support IPv6 outbound routing, which causes connection timeouts (ENETUNREACH) to Supabase hosts.
@@ -157,8 +158,13 @@ export async function POST(req: NextRequest) {
   });
   const pgClient = new Client({ 
     connectionString,
-    lookup: (hostname: any, options: any, callback: any) => {
-      dns.lookup(hostname, { family: 4 }, callback);
+    stream: (opts: any) => {
+      return net.connect({
+        ...opts,
+        lookup: (hostname: any, dnsOpts: any, callback: any) => {
+          dns.lookup(hostname, { family: 4 }, callback);
+        }
+      });
     }
   } as any);
   
