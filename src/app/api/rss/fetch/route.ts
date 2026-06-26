@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
     lookup: (hostname, options, callback) => {
       dns.lookup(hostname, { family: 4 }, callback);
     }
-  });
+  } as any);
   
   let totalImported = 0;
   let hasErrors = false;
