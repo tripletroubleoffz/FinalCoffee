@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Parser from 'rss-parser';
 import { Client } from 'pg';
+import dns from 'dns';
+
+// Force DNS resolution to prioritize IPv4 over IPv6.
+// GitHub Actions runners do not support IPv6 outbound routing, which causes connection timeouts (ENETUNREACH) to Supabase hosts.
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 function decodeHTMLEntities(text: string): string {
   return (text || '')

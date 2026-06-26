@@ -41,8 +41,8 @@ jobs:
       # Since it runs on localhost inside the GitHub runner, it does not have the Vercel 10s timeout limit.
       - name: Run Next.js Server & Trigger Ingestion
         run: |
-          # 1. Start server in background
-          npm run dev &
+          # 1. Start server in background with IPv4 priority flag to prevent Supabase connection errors (ENETUNREACH) on GitHub Actions runners
+          NODE_OPTIONS="--dns-result-order=ipv4first" npm run dev &
           
           # 2. Loop until the local server is fully responsive (up to 60 seconds)
           echo "Waiting for Next.js local server to start on port 3000..."
